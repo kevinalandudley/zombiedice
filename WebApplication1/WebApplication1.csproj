@@ -44,6 +44,34 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.AI.Agent.Intercept, Version=2.0.6.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.ApplicationInsights.Agent.Intercept.2.0.6\lib\net45\Microsoft.AI.Agent.Intercept.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.AI.DependencyCollector, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.ApplicationInsights.DependencyCollector.2.2.0\lib\net45\Microsoft.AI.DependencyCollector.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.AI.PerfCounterCollector, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.ApplicationInsights.PerfCounterCollector.2.2.0\lib\net45\Microsoft.AI.PerfCounterCollector.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.AI.ServerTelemetryChannel, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel.2.2.0\lib\net45\Microsoft.AI.ServerTelemetryChannel.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.AI.Web, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.ApplicationInsights.Web.2.2.0\lib\net45\Microsoft.AI.Web.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.AI.WindowsServer, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.ApplicationInsights.WindowsServer.2.2.0\lib\net45\Microsoft.AI.WindowsServer.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.ApplicationInsights, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.ApplicationInsights.2.2.0\lib\net46\Microsoft.ApplicationInsights.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
       <Private>True</Private>
@@ -167,27 +195,82 @@
     <Compile Include="App_Start\IdentityConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\Startup.Auth.cs" />
-    <Compile Include="Controllers\AccountController.cs" />
-    <Compile Include="Controllers\HomeController.cs" />
-    <Compile Include="Controllers\ManageController.cs" />
+    <Compile Include="Controllers\ZombieController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Models\AccountViewModels.cs" />
-    <Compile Include="Models\IdentityModels.cs" />
-    <Compile Include="Models\ManageViewModels.cs" />
+    <Compile Include="Models\Die.cs" />
+    <Compile Include="Models\DieCollection.cs" />
+    <Compile Include="Models\Game.cs" />
+    <Compile Include="Models\Player.cs" />
+    <Compile Include="Models\Turn.cs" />
+    <Compile Include="Models\ZombieModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap.css" />
-    <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\GreenBrain.gif" />
+    <Content Include="Content\GreenDoubleBrain.gif" />
+    <Content Include="Content\GreenDoubleShotgun.gif" />
+    <Content Include="Content\GreenEnergyDrink.gif" />
+    <Content Include="Content\GreenFootprints.gif" />
+    <Content Include="Content\GreenHeelprints.gif" />
+    <Content Include="Content\GreenHelmet.gif" />
+    <Content Include="Content\GreenShotgun.gif" />
+    <Content Include="Content\HottieBrain.gif" />
+    <Content Include="Content\HottieDoubleBrain.gif" />
+    <Content Include="Content\HottieDoubleShotgun.gif" />
+    <Content Include="Content\HottieEnergyDrink.gif" />
+    <Content Include="Content\HottieFootprints.gif" />
+    <Content Include="Content\HottieHeelprints.gif" />
+    <Content Include="Content\HottieHelmet.gif" />
+    <Content Include="Content\HottieShotgun.gif" />
+    <Content Include="Content\HunkBrain.gif" />
+    <Content Include="Content\HunkDoubleBrain.gif" />
+    <Content Include="Content\HunkDoubleShotgun.gif" />
+    <Content Include="Content\HunkEnergyDrink.gif" />
+    <Content Include="Content\HunkFootprints.gif" />
+    <Content Include="Content\HunkHeelprints.gif" />
+    <Content Include="Content\HunkHelmet.gif" />
+    <Content Include="Content\HunkShotgun.gif" />
+    <Content Include="Content\RedBrain.gif" />
+    <Content Include="Content\RedDoubleBrain.gif" />
+    <Content Include="Content\RedDoubleShotgun.gif" />
+    <Content Include="Content\RedEnergyDrink.gif" />
+    <Content Include="Content\RedFootprints.gif" />
+    <Content Include="Content\RedHeelprints.gif" />
+    <Content Include="Content\RedHelmet.gif" />
+    <Content Include="Content\RedShotgun.gif" />
+    <Content Include="Content\SantaBrain.gif" />
+    <Content Include="Content\SantaDoubleBrain.gif" />
+    <Content Include="Content\SantaDoubleShotgun.gif" />
+    <Content Include="Content\SantaEnergyDrink.gif" />
+    <Content Include="Content\SantaFootprints.gif" />
+    <Content Include="Content\SantaHeelprints.gif" />
+    <Content Include="Content\SantaHelmet.gif" />
+    <Content Include="Content\SantaShotgun.gif" />
+    <Content Include="Content\YellowBrain.gif" />
+    <Content Include="Content\YellowDoubleBrain.gif" />
+    <Content Include="Content\YellowDoubleShotgun.gif" />
+    <Content Include="Content\YellowEnergyDrink.gif" />
+    <Content Include="Content\YellowFootprints.gif" />
+    <Content Include="Content\YellowHeelprints.gif" />
+    <Content Include="Content\YellowHelmet.gif" />
+    <Content Include="Content\YellowShotgun.gif" />
+    <Content Include="Content\ZombieButton.gif" />
+    <Content Include="Content\ZombieDiceBackground.gif" />
+    <Content Include="Content\ZombieDiceLogo.gif" />
+    <Content Include="Content\zombiedice_minisite.jpg" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
+    <Content Include="ApplicationInsights.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />
@@ -211,29 +294,10 @@
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
-    <Content Include="Views\Home\About.cshtml" />
-    <Content Include="Views\Home\Contact.cshtml" />
-    <Content Include="Views\Home\Index.cshtml" />
-    <Content Include="Views\Account\_ExternalLoginsListPartial.cshtml" />
-    <Content Include="Views\Account\ConfirmEmail.cshtml" />
-    <Content Include="Views\Account\ExternalLoginConfirmation.cshtml" />
-    <Content Include="Views\Account\ExternalLoginFailure.cshtml" />
-    <Content Include="Views\Account\ForgotPassword.cshtml" />
-    <Content Include="Views\Account\ForgotPasswordConfirmation.cshtml" />
-    <Content Include="Views\Account\Login.cshtml" />
-    <Content Include="Views\Account\Register.cshtml" />
-    <Content Include="Views\Account\ResetPassword.cshtml" />
-    <Content Include="Views\Account\ResetPasswordConfirmation.cshtml" />
-    <Content Include="Views\Account\SendCode.cshtml" />
-    <Content Include="Views\Account\VerifyCode.cshtml" />
-    <Content Include="Views\Manage\AddPhoneNumber.cshtml" />
-    <Content Include="Views\Manage\ChangePassword.cshtml" />
-    <Content Include="Views\Manage\Index.cshtml" />
-    <Content Include="Views\Manage\ManageLogins.cshtml" />
-    <Content Include="Views\Manage\SetPassword.cshtml" />
-    <Content Include="Views\Manage\VerifyPhoneNumber.cshtml" />
     <Content Include="Views\Shared\Lockout.cshtml" />
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
+    <Content Include="Views\Zombie\Index.cshtml" />
+    <Content Include="Views\Shared\_ZombiePage.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -264,7 +328,7 @@
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>16045</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost:16045/</IISUrl>
+          <IISUrl>http://localhost:16047/</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>
