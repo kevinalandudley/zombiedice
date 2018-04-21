@@ -134,21 +134,6 @@ namespace WebApplication1.Models
 
         public GameRoundType RoundType { get; set; }
 
-        public string Message()
-        {
-            // Message for round type.
-            switch (RoundType)
-            {
-                case GameRoundType.GameOver:
-                    return "Wins!";
-                case GameRoundType.FinalRound:
-                    return "Last Round!";
-                case GameRoundType.TieBreaker:
-                    return "Tiebreaker!";
-                default:
-                    return "";
-            }
-        }
     }
 
     public enum GameRoundType
