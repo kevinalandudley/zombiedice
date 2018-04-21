@@ -27,7 +27,7 @@ namespace WebApplication1.Models
             StartingPlayerIndex = -1;
             WinnerPlayerIndex = -1;
             RoundType = GameRoundType.Regular;
-            Turn = new Turn(RoundType);
+            Turn = new Turn(RoundType, HighScore);
         }
 
         public List<Player> Players { get; set; }
@@ -95,8 +95,7 @@ namespace WebApplication1.Models
                 if (RoundType == GameRoundType.FinalRound || RoundType == GameRoundType.TieBreaker)
                 {
                     // Flag player as out if they are less than the high score.
-                    int highScore = Players.Max(x => x.Score);
-                    if (Players[ActivePlayerIndex].Score < highScore)
+                    if (Players[ActivePlayerIndex].Score < HighScore)
                     {
                         Players[ActivePlayerIndex].IsOut = true;
                     }
@@ -104,11 +103,11 @@ namespace WebApplication1.Models
                     if (NextPlayerIndex() == StartingPlayerIndex)
                     {
                         // Set the winning player if there is only one player with the high score.
-                        if (Players.Count(x => x.Score == highScore) == 1)
+                        if (Players.Count(x => x.Score == HighScore) == 1)
                         {
                             // Game is over.
                             RoundType = GameRoundType.GameOver;
-                            WinnerPlayerIndex = Players.FindIndex(x => x.Score == highScore);
+                            WinnerPlayerIndex = Players.FindIndex(x => x.Score == HighScore);
                         }
                         else
                         {
@@ -124,13 +123,22 @@ namespace WebApplication1.Models
             if (RoundType != GameRoundType.GameOver)
             {
                 ActivePlayerIndex = NextPlayerIndex();
-                Turn = new Turn(RoundType);
+                Turn = new Turn(RoundType, HighScore);
             }
             else
             {
                 Turn.RoundType = RoundType;
             }
         }
+
+        private int HighScore
+        {
+            get
+            {
+                return Players.Max(x => x.Score);
+            }
+        }
+
 
         public GameRoundType RoundType { get; set; }
 

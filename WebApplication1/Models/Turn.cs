@@ -9,13 +9,14 @@ namespace WebApplication1.Models
     {
 
         public Turn()
-            : this(GameRoundType.Regular)
+            : this(GameRoundType.Regular, 0)
         {
         }
 
-        public Turn(GameRoundType roundType)
+        public Turn(GameRoundType roundType, int highscore)
         {
             RoundType = roundType;
+            HighScore = highscore;
             NextAction = Action.Draw;
             _Cup = new DieCollection();
             Hand = new DieCollection();
@@ -25,6 +26,8 @@ namespace WebApplication1.Models
         private static readonly Random randomGenerator = new System.Random();
 
         public GameRoundType RoundType { get; set; }
+
+        public int HighScore { get; set; }
 
         public DieCollection _Cup;
         public DieCollection Cup
@@ -152,8 +155,15 @@ namespace WebApplication1.Models
                         }
                         else
                         {
-                            // Set the next action.
-                            NextAction = Action.DrawQuit;
+                            // If in final round or tiebreaker, don't allow quit unless tied.
+                            if ((RoundType == GameRoundType.FinalRound || RoundType == GameRoundType.TieBreaker) && BrainValue() < HighScore)
+                            {
+                                NextAction = Action.Draw;
+                            }
+                            else
+                            {
+                                NextAction = Action.DrawQuit;
+                            }
                         }
                     }
                 }

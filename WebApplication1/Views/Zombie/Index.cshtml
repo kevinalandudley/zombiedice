@@ -10,6 +10,7 @@
     <!--Game-->
     @Html.HiddenFor(model => model.Game.RoundType, new { @Value = Model.Game.RoundType })
     @Html.HiddenFor(model => model.Game.Turn.RoundType, new { @Value = Model.Game.Turn.RoundType })
+    @Html.HiddenFor(model => model.Game.Turn.HighScore, new { @Value = Model.Game.Turn.HighScore })
 
     <table border="0">
 
