@@ -239,22 +239,6 @@ namespace WebApplication1.Models
             return result;
         }
 
-        private string RoundMessage()
-        {
-            // Message for round type.
-            switch (RoundType)
-            {
-                case GameRoundType.GameOver:
-                    return "Game Over!";
-                case GameRoundType.FinalRound:
-                    return "Last Round!";
-                case GameRoundType.TieBreaker:
-                    return "Tiebreaker!";
-                default:
-                    return "";
-            }
-        }
-
         private TurnMessageId MessageId
         {
             get
@@ -337,17 +321,12 @@ namespace WebApplication1.Models
                 switch (MessageId)
                 {
                     case TurnMessageId.EnergyGetsRunners:
-                        return TurnMessageType.SortAction;
                     case TurnMessageId.HunkSavesHottie:
-                        return TurnMessageType.SortAction;
                     case TurnMessageId.HottieSavesHunk:
-                        return TurnMessageType.SortAction;
                     case TurnMessageId.Shotgunned:
                         return TurnMessageType.SortAction;
                     case TurnMessageId.GameOver:
-                        return TurnMessageType.RoundStatus;
                     case TurnMessageId.FinalRound:
-                        return TurnMessageType.RoundStatus;
                     case TurnMessageId.TieBreaker:
                         return TurnMessageType.RoundStatus;
                     default:
@@ -373,8 +352,6 @@ namespace WebApplication1.Models
             SortAction,
             RoundStatus
         }
-
-
 
         public int BrainValue()
         {
