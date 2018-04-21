@@ -9,14 +9,23 @@ namespace WebApplication1.Models
     {
 
         public Turn()
+            : this(GameRoundType.Regular)
         {
+        }
+
+        public Turn(GameRoundType roundType)
+        {
+            RoundType = roundType;
             _NextAction = Action.Draw;
             _Cup = new DieCollection();
             Hand = new DieCollection();
             Keep = new DieCollection();
+            Message = RoundMessage();
         }
 
         private static readonly Random randomGenerator = new System.Random();
+
+        public GameRoundType RoundType { get; set; }
 
         public DieCollection _Cup;
         public DieCollection Cup
@@ -85,6 +94,7 @@ namespace WebApplication1.Models
                 _Cup.Dice.Remove(die);
             }
             // Set the next action.
+            Message = RoundMessage();
             _NextAction = Action.Roll;
         }
 
@@ -93,6 +103,7 @@ namespace WebApplication1.Models
             // Roll the hand.
             Hand.Roll();
             // Set the next action.
+            Message = RoundMessage();
             if (Hand.Dice.FindAll(x => x.FaceType == DieFaceType.Footprints).Count() >= Hand.Dice.Count())
             {
                 // All dice in the hand are footprints, so there is nothing to sort.
@@ -149,10 +160,27 @@ namespace WebApplication1.Models
                         else
                         {
                             // Set the next action.
+                            Message = RoundMessage();
                             _NextAction = Action.DrawQuit;
                         }
                     }
                 }
+            }
+        }
+
+        private string RoundMessage()
+        {
+            // Message for round type.
+            switch (RoundType)
+            {
+                case GameRoundType.GameOver:
+                    return "Game Over!";
+                case GameRoundType.FinalRound:
+                    return "Last Round!";
+                case GameRoundType.TieBreaker:
+                    return "Tiebreaker!";
+                default:
+                    return "";
             }
         }
 

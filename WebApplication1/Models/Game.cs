@@ -26,7 +26,8 @@ namespace WebApplication1.Models
             ActivePlayerIndex = 0;
             StartingPlayerIndex = -1;
             WinnerPlayerIndex = -1;
-            Turn = new Turn();
+            RoundType = GameRoundType.Regular;
+            Turn = new Turn(RoundType);
         }
 
         public List<Player> Players { get; set; }
@@ -81,44 +82,17 @@ namespace WebApplication1.Models
             {
                 Players[ActivePlayerIndex].Score += Turn.Keep.BrainValue();
             }
-            //// Check for first player over 13. This sets the starting player for the last round.
-            //if (StartingPlayerIndex < 0  && Players[ActivePlayerIndex].Score >= 13)
-            //{
-            //    StartingPlayerIndex = ActivePlayerIndex;
-            //}
-            //else
-            //{
-            //    // Check if next player is the starting player. This means the last round is done.
-            //    if (NextPlayerIndex() == StartingPlayerIndex)
-            //    {
-            //        // Final round is done.
-            //        IsTiebreaker = true;
-            //        // Flag players as out if they are less than the high score.
-            //        int highScore = Players.Max(x => x.Score);
-            //        foreach (var player in Players)
-            //        {
-            //            if (player.Score < highScore)
-            //            {
-            //                player.IsOut = true;
-            //            }
-            //        }
-            //        // Reset the starting player.
-            //        StartingPlayerIndex = NextPlayerIndex();
-            //        // Set the winning player if there is only one player with the high score.
-            //        if (Players.Count(x => x.Score == highScore) == 1)
-            //        {
-            //            WinnerPlayerIndex = Players.FindIndex(x => x.Score == highScore);
-            //        }
-            //    }
             // Check for first player over 13. This sets the starting player for the last round.
             if (StartingPlayerIndex < 0 && Players[ActivePlayerIndex].Score >= 13)
             {
+                // It is now the final round.
+                RoundType = GameRoundType.FinalRound;
                 StartingPlayerIndex = ActivePlayerIndex;
             }
             else
             {
-                // Check for starting player set (last round or tie breaker).
-                if (StartingPlayerIndex >= 0)
+                // Check last round or tie breaker.
+                if (RoundType == GameRoundType.FinalRound || RoundType == GameRoundType.TieBreaker)
                 {
                     // Flag player as out if they are less than the high score.
                     int highScore = Players.Max(x => x.Score);
@@ -126,63 +100,58 @@ namespace WebApplication1.Models
                     {
                         Players[ActivePlayerIndex].IsOut = true;
                     }
-                    // Check if next player is the starting player. This means the last round is done.
+                    // Check if next player is the starting player. This means the round is done.
                     if (NextPlayerIndex() == StartingPlayerIndex)
                     {
-                        // Final round is done. It is now a tiebreaker if there is not a winner.
-                        IsTiebreaker = true;
-                        // Reset the starting player.
-                        StartingPlayerIndex = NextPlayerIndex();
                         // Set the winning player if there is only one player with the high score.
                         if (Players.Count(x => x.Score == highScore) == 1)
                         {
+                            // Game is over.
+                            RoundType = GameRoundType.GameOver;
                             WinnerPlayerIndex = Players.FindIndex(x => x.Score == highScore);
+                        }
+                        else
+                        {
+                            // Final round is done. There is no winner. It is now a tiebreaker.
+                            RoundType = GameRoundType.TieBreaker;
+                            // Reset the starting player.
+                            StartingPlayerIndex = NextPlayerIndex();
                         }
                     }
                 }
             }
-            // Set next player.
-            if (!IsDone())
+            // Set next player if the game is not over.
+            if (RoundType != GameRoundType.GameOver)
             {
                 ActivePlayerIndex = NextPlayerIndex();
-                Turn = new Turn();
+                Turn = new Turn(RoundType);
             }
         }
 
-        public bool IsDone()
-        {
-            return WinnerPlayerIndex != -1;
-        }
-
-        public bool IsTiebreaker { get; set; }
+        public GameRoundType RoundType { get; set; }
 
         public string Message()
         {
-            // Check for winner.
-            if (WinnerPlayerIndex >= 0)
+            // Message for round type.
+            switch (RoundType)
             {
-                return "WINS!";
-            }
-            else
-            {
-                // Check for last round or tiebreaker.
-                if (StartingPlayerIndex >= 0)
-                {
-                    if (IsTiebreaker)
-                    {
-                        return "Tiebreaker!";
-                    }
-                    else
-                    {
-                        return "Last Round!";
-                    }
-                }
-                else
-                {
+                case GameRoundType.GameOver:
+                    return "Wins!";
+                case GameRoundType.FinalRound:
+                    return "Last Round!";
+                case GameRoundType.TieBreaker:
+                    return "Tiebreaker!";
+                default:
                     return "";
-                }
             }
         }
     }
 
+    public enum GameRoundType
+    {
+        Regular,
+        FinalRound,
+        TieBreaker,
+        GameOver
+    }
 }
