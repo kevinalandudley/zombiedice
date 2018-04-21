@@ -16,11 +16,10 @@ namespace WebApplication1.Models
         public Turn(GameRoundType roundType)
         {
             RoundType = roundType;
-            _NextAction = Action.Draw;
+            NextAction = Action.Draw;
             _Cup = new DieCollection();
             Hand = new DieCollection();
             Keep = new DieCollection();
-            Message = RoundMessage();
         }
 
         private static readonly Random randomGenerator = new System.Random();
@@ -94,8 +93,7 @@ namespace WebApplication1.Models
                 _Cup.Dice.Remove(die);
             }
             // Set the next action.
-            Message = RoundMessage();
-            _NextAction = Action.Roll;
+            NextAction = Action.Roll;
         }
 
         public void Roll()
@@ -103,41 +101,37 @@ namespace WebApplication1.Models
             // Roll the hand.
             Hand.Roll();
             // Set the next action.
-            Message = RoundMessage();
             if (Hand.Dice.FindAll(x => x.FaceType == DieFaceType.Footprints).Count() >= Hand.Dice.Count())
             {
                 // All dice in the hand are footprints, so there is nothing to sort.
-                _NextAction = Action.DrawQuit;
+                NextAction = Action.DrawQuit;
             }
             else
             {
-                _NextAction = Action.Sort;
+                NextAction = Action.Sort;
             }
         }
 
         public void Sort()
         {
-            // Check for Energy flips runners.
+            // Sort Energy gets runners.
             if (SortEnergyGetsRunners())
             {
-                Message = "Energy Gets Runners!";
-                _NextAction = Action.Sort;
+                NextAction = Action.Sort;
             }
             else
             {
-                // Check for Hunk saves Hottie.
+                // Sort Hunk saves Hottie.
                 if (SortShotgunSavesBrain(DieKind.Hunk, DieKind.Hottie))
                 {
-                    Message = "Hunk Saves Hottie!";
-                    _NextAction = Action.Sort;
+                    NextAction = Action.Sort;
                 }
                 else
                 {
-                    // Check for Hottie saves Hunk.
+                    // Sort Hottie saves Hunk.
                     if (SortShotgunSavesBrain(DieKind.Hottie, DieKind.Hunk))
                     {
-                        Message = "Hottie Saves Hunk!";
-                        _NextAction = Action.Sort;
+                        NextAction = Action.Sort;
                     }
                     else
                     {
@@ -154,46 +148,43 @@ namespace WebApplication1.Models
                         // Check if shotgunned.
                         if (IsShotgunned())
                         {
-                            Message = "Shotgunned!";
-                            _NextAction = Action.Quit;
+                            NextAction = Action.Quit;
                         }
                         else
                         {
                             // Set the next action.
-                            Message = RoundMessage();
-                            _NextAction = Action.DrawQuit;
+                            NextAction = Action.DrawQuit;
                         }
                     }
                 }
             }
         }
 
-        private string RoundMessage()
+        private bool HasEnergyGetsRunners()
         {
-            // Message for round type.
-            switch (RoundType)
-            {
-                case GameRoundType.GameOver:
-                    return "Game Over!";
-                case GameRoundType.FinalRound:
-                    return "Last Round!";
-                case GameRoundType.TieBreaker:
-                    return "Tiebreaker!";
-                default:
-                    return "";
-            }
+            // Return if hand or keep has energy drink and hand has green footprints.
+            return (Hand.HasDie(DieFaceType.EnergyDrink) || Keep.HasDie(DieFaceType.EnergyDrink)) &&
+                   (Hand.Dice.Exists(x => x.Kind == DieKind.Green && x.FaceType == DieFaceType.Footprints));
+        }
+
+        private bool HasShotgunSavesBrain(DieKind shotgunDieKind, DieKind brainDieKind)
+        {
+            // Return if hand has shotgun for the shotgun type and hand or keep has brain for the brain type.
+            return (Hand.HasDie(shotgunDieKind, DieFaceType.Shotgun) && 
+                   (Hand.HasDie(brainDieKind, DieFaceType.Brain) || Keep.HasDie(brainDieKind, DieFaceType.Brain)));
         }
 
         public bool IsShotgunned()
         {
-            return Keep.ShotgunValue() >= 3;
+            // Return if shotguns in hand and keep are over maximum shotgun value.
+            return Hand.ShotgunValue() + Keep.ShotgunValue() >= 3;
         }
 
         bool SortEnergyGetsRunners()
         {
             bool result = false;
-            // Check if hand or keep has Energy.
-            if (Hand.HasDie(DieFaceType.EnergyDrink) || Keep.HasDie(DieFaceType.EnergyDrink))
+            // Check if has energy gets runners.
+            if (HasEnergyGetsRunners())
             {
                 // Flip all green footprints in the hand to brains.
                 foreach (var die in Hand.Dice)
@@ -223,7 +214,7 @@ namespace WebApplication1.Models
         {
             bool result = false;
             // Check if hand has shotgun for the shotgun type.
-            if (Hand.GetDie(shotgunDieKind, DieFaceType.Shotgun) != null)
+            if (HasShotgunSavesBrain(shotgunDieKind, brainDieKind))
             {
                 // Check if hand or keep has brain for the brain type.
                 // Move the saved brain into the cup.
@@ -248,7 +239,142 @@ namespace WebApplication1.Models
             return result;
         }
 
-        public string Message;
+        private string RoundMessage()
+        {
+            // Message for round type.
+            switch (RoundType)
+            {
+                case GameRoundType.GameOver:
+                    return "Game Over!";
+                case GameRoundType.FinalRound:
+                    return "Last Round!";
+                case GameRoundType.TieBreaker:
+                    return "Tiebreaker!";
+                default:
+                    return "";
+            }
+        }
+
+        private TurnMessageId MessageId
+        {
+            get
+            {
+                // Get sort message.
+                if (NextAction == Action.Sort && HasEnergyGetsRunners())
+                {
+                    return TurnMessageId.EnergyGetsRunners;
+                }
+                else
+                {
+                    if (NextAction == Action.Sort && HasShotgunSavesBrain(DieKind.Hunk, DieKind.Hottie))
+                    {
+                        return TurnMessageId.HunkSavesHottie;
+                    }
+                    else
+                    {
+                        if (NextAction == Action.Sort && HasShotgunSavesBrain(DieKind.Hottie, DieKind.Hunk))
+                        {
+                            return TurnMessageId.HottieSavesHunk;
+                        }
+                        else
+                        {
+                            if ((NextAction == Action.Sort || NextAction == Action.Quit) && IsShotgunned())
+                            {
+                                return TurnMessageId.Shotgunned;
+                            }
+                            else
+                            {
+                                // Get round message.
+                                // Message for round type.
+                                switch (RoundType)
+                                {
+                                    case GameRoundType.GameOver:
+                                        return TurnMessageId.GameOver;
+                                    case GameRoundType.FinalRound:
+                                        return TurnMessageId.FinalRound;
+                                    case GameRoundType.TieBreaker:
+                                        return TurnMessageId.TieBreaker;
+                                    default:
+                                        return TurnMessageId.None;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public string Message
+        {
+            get
+            {
+                switch (MessageId)
+                {
+                    case TurnMessageId.EnergyGetsRunners:
+                        return "Energy Gets Runners!";
+                    case TurnMessageId.HunkSavesHottie:
+                        return "Hunk Saves Hottie!";
+                    case TurnMessageId.HottieSavesHunk:
+                        return "Hottie Saves Hunk!";
+                    case TurnMessageId.Shotgunned:
+                        return "Shotgunned!";
+                    case TurnMessageId.GameOver:
+                        return "Game Over!";
+                    case TurnMessageId.FinalRound:
+                        return "Last Round!";
+                    case TurnMessageId.TieBreaker:
+                        return "Tiebreaker!";
+                    default:
+                        return "";
+                }
+            }
+        }
+
+        public TurnMessageType MessageType
+        {
+            get
+            {
+                switch (MessageId)
+                {
+                    case TurnMessageId.EnergyGetsRunners:
+                        return TurnMessageType.SortAction;
+                    case TurnMessageId.HunkSavesHottie:
+                        return TurnMessageType.SortAction;
+                    case TurnMessageId.HottieSavesHunk:
+                        return TurnMessageType.SortAction;
+                    case TurnMessageId.Shotgunned:
+                        return TurnMessageType.SortAction;
+                    case TurnMessageId.GameOver:
+                        return TurnMessageType.RoundStatus;
+                    case TurnMessageId.FinalRound:
+                        return TurnMessageType.RoundStatus;
+                    case TurnMessageId.TieBreaker:
+                        return TurnMessageType.RoundStatus;
+                    default:
+                        return TurnMessageType.SortAction;
+                }
+            }
+        }
+
+        private enum TurnMessageId
+        {
+            None,
+            EnergyGetsRunners,
+            HunkSavesHottie,
+            HottieSavesHunk,
+            Shotgunned,
+            FinalRound,
+            TieBreaker,
+            GameOver
+        }
+
+        public enum TurnMessageType
+        {
+            SortAction,
+            RoundStatus
+        }
+
+
 
         public int BrainValue()
         {
@@ -269,14 +395,7 @@ namespace WebApplication1.Models
             Quit
         }
 
-        private Action _NextAction;
-        public Action NextAction
-        {
-            get
-            {
-                return _NextAction;
-            }
-        }
+        public Action NextAction { get; set; }
 
         public string NextActionName
         {
@@ -296,6 +415,7 @@ namespace WebApplication1.Models
                 }
             }
         }
+
 
     }
 }

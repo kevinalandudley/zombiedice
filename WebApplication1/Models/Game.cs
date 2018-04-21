@@ -11,7 +11,7 @@ namespace WebApplication1.Models
         public Game()
         {
             Players = new List<Player>();
-            Players.Add(new Player("Kevin McKevinface Doodah"));
+            Players.Add(new Player("Kevin"));
             Players.Add(new Player("Joel"));
             Players.Add(new Player("Mom"));
             Players.Add(new Player("Dad"));

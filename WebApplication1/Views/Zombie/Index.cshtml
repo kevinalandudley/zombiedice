@@ -22,7 +22,7 @@
             }
             else
             {
-                <td colspan="5" style="text-align:center; font-size:50px; font-weight:bold; font-family:Stencil; color:crimson; text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;">@Model.Game.Players[Model.Game.ActivePlayerIndex].Name</td>
+                <td colspan="5" style="text-align:center; font-size:50px; font-weight:bold; font-family:Stencil; color:crimson; text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;">@Model.Game.Players[Model.Game.ActivePlayerIndex].Name Wins!</td>
             }
         </tr>
 
@@ -79,7 +79,14 @@
             <td width="10px"></td>
 
             <!--Turn message-->
-            <td width="265px" style="text-align:center; font-family:Broadway; font-size:24px; color:darkred">@Model.Game.Turn.Message</td>
+            @{
+                var messageColor = "darkred";
+                if (Model.Game.Turn.MessageType == WebApplication1.Models.Turn.TurnMessageType.RoundStatus)
+                {
+                    messageColor = "lightsteelblue";
+                }
+                <td width="265px" style="text-align:center; font-family:Broadway; font-size:24px; color:@messageColor">@Model.Game.Turn.Message</td>
+            }
             <td width="10px"></td>
 
             <!--Shots count-->
@@ -148,7 +155,7 @@
                                     if (buttonName != "")
                                     {
                                         string buttonWidth = (hasQuit) ? "49%" : "100%";
-                                        <input type="submit" id="@buttonName" name="command" value="@buttonName" style="height:60px; width:@buttonWidth; font-size:24px; background-color:burlywood; color:black" />
+                                        <input type="submit" id="@buttonName" name="command" value="@buttonName" style="height:60px; width:@buttonWidth; font-size:24px; background-color:gold; color:black" />
                                     }
                                     if (hasQuit)
                                     {

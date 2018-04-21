@@ -23,7 +23,12 @@ namespace WebApplication1.Models
 
         public bool HasDie(DieFaceType faceType)
         {
-            return Dice.FirstOrDefault(x => x.FaceType == faceType) != null;
+            return Dice.Exists(x => x.FaceType == faceType);
+        }
+
+        public bool HasDie(DieKind kind, DieFaceType faceType)
+        {
+            return Dice.Exists(x => x.Kind == kind && x.FaceType == faceType);
         }
 
         public int DieCount(DieKind kind)
