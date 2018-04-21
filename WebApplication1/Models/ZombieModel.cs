@@ -10,10 +10,10 @@ namespace WebApplication1.Models
 
         public ZombieModel()
         {
-            game = new Game();
+            Game = new Game();
         }
 
-        public virtual Game game { get; set; }
+        public virtual Game Game { get; set; }
 
     }
 }

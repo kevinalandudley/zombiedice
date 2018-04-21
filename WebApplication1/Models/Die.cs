@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
-//kevin
-
-//JOEL
 
 namespace WebApplication1.Models
 {
@@ -26,7 +23,7 @@ namespace WebApplication1.Models
         private static readonly Random _RandomGenerator = new System.Random();
 
         public DieKind Kind { get; set; }
-   
+
         public List<DieFace> Faces
         {
             get
@@ -49,7 +46,7 @@ namespace WebApplication1.Models
                         return null;
                 }
             }
-            set {; }
+            set { ; }
         }
 
         public DieFace Face { get; set; }

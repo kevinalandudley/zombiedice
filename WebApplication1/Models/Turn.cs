@@ -19,7 +19,7 @@ namespace WebApplication1.Models
         private static readonly Random randomGenerator = new System.Random();
 
         public DieCollection _Cup;
-        public DieCollection Cup 
+        public DieCollection Cup
         {
             get
             {
@@ -66,7 +66,7 @@ namespace WebApplication1.Models
             }
         }
 
-        public bool CupWasFilled  { get; set; }
+        public bool CupWasFilled { get; set; }
 
         public DieCollection Hand { get; set; }
 

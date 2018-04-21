@@ -48,13 +48,13 @@ namespace WebApplication1.Models
 
         public int BrainValue()
         {
-                int a = Dice.Sum(x => x.BrainValue);
-                return Dice.Sum(x => x.BrainValue);
+            int a = Dice.Sum(x => x.BrainValue);
+            return Dice.Sum(x => x.BrainValue);
         }
 
         public int ShotgunValue()
         {
-                return Dice.Sum(x => x.ShotgunValue);
+            return Dice.Sum(x => x.ShotgunValue);
         }
 
     }

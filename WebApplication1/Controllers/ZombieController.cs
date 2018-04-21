@@ -21,16 +21,16 @@ namespace WebApplication1.Controllers
             switch (command)
             {
                 case "Draw":
-                    model.game.turn.Draw();
+                    model.Game.Turn.Draw();
                     break;
                 case "Roll":
-                    model.game.turn.Roll();
+                    model.Game.Turn.Roll();
                     break;
                 case "Sort":
-                    model.game.turn.Sort();
+                    model.Game.Turn.Sort();
                     break;
                 case "Quit":
-                    model.game.NextTurn();
+                    model.Game.NextTurn();
                     break;
             }
             return View("Index", model);
