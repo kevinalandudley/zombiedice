@@ -10,16 +10,13 @@
 </head>
 <body>
     @Html.Partial("_ZombiePage")
-    <div class="navbar navbar-inverse navbar-fixed-top">
+    @*<div class="navbar navbar-inverse navbar-fixed-top">
         <div class="container">
-            
         </div>
-    </div>
+    </div>*@
     <div>
         @RenderBody()
-        @*<hr />*@
     </div>
-
     @Scripts.Render("~/bundles/jquery")
     @*@Scripts.Render("~/bundles/bootstrap")*@
     @RenderSection("scripts", required: false)
