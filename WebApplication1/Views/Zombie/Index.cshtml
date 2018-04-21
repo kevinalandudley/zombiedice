@@ -18,11 +18,11 @@
             <td colspan="2"><img src="~/Content/ZombieDiceLogo.gif" /></td>
             @if (Model.Game.RoundType == WebApplication1.Models.GameRoundType.GameOver)
             {
-                <td colspan="5" style="text-align:center; font-size:50px; font-weight:bold; font-family:Stencil; color:crimson; text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;">@Model.Game.Players[Model.Game.WinnerPlayerIndex].Name</td>
+                <td colspan="5" style="text-align:center; font-size:50px; font-weight:bold; font-family:Stencil; color:crimson; text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;">@Model.Game.Players[Model.Game.WinnerPlayerIndex].Name Wins!</td>
             }
             else
             {
-                <td colspan="5" style="text-align:center; font-size:50px; font-weight:bold; font-family:Stencil; color:crimson; text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;">@Model.Game.Players[Model.Game.ActivePlayerIndex].Name Wins!</td>
+                <td colspan="5" style="text-align:center; font-size:50px; font-weight:bold; font-family:Stencil; color:crimson; text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;">@Model.Game.Players[Model.Game.ActivePlayerIndex].Name</td>
             }
         </tr>
 
@@ -155,12 +155,12 @@
                                     if (buttonName != "")
                                     {
                                         string buttonWidth = (hasQuit) ? "49%" : "100%";
-                                        <input type="submit" id="@buttonName" name="command" value="@buttonName" style="height:60px; width:@buttonWidth; font-size:24px; background-color:gold; color:black" />
+                                        <input type="submit" id="@buttonName" name="command" value="@buttonName" style="height:60px; width:@buttonWidth; font-size:24px; background-color:#21610B; color:white" />
                                     }
                                     if (hasQuit)
                                     {
                                         string buttonWidth = (buttonName != "") ? "49%" : "100%";
-                                        <input type="submit" id="Quit" name="command" value="Quit" style="height:60px; width:@buttonWidth; font-size:24px; background-color:burlywood; color:black" />
+                                        <input type="submit" id="Quit" name="command" value="Quit" style="height:60px; width:@buttonWidth; font-size:24px; background-color:darkred; color:white" />
                                     }
                                 }
                             }

@@ -126,6 +126,10 @@ namespace WebApplication1.Models
                 ActivePlayerIndex = NextPlayerIndex();
                 Turn = new Turn(RoundType);
             }
+            else
+            {
+                Turn.RoundType = RoundType;
+            }
         }
 
         public GameRoundType RoundType { get; set; }
