@@ -104,7 +104,7 @@ namespace WebApplication1.Models
             if (Hand.Dice.FindAll(x => x.FaceType == DieFaceType.Footprints).Count() >= Hand.Dice.Count())
             {
                 // All dice in the hand are footprints, so there is nothing to sort.
-                NextAction = Action.DrawQuit;
+                NextAction = Action.RollQuit;
             }
             else
             {
@@ -391,6 +391,7 @@ namespace WebApplication1.Models
             Draw,
             DrawQuit,
             Roll,
+            RollQuit,
             Sort,
             Quit
         }
@@ -407,6 +408,7 @@ namespace WebApplication1.Models
                     case WebApplication1.Models.Turn.Action.DrawQuit:
                         return "Draw";
                     case WebApplication1.Models.Turn.Action.Roll:
+                    case WebApplication1.Models.Turn.Action.RollQuit:
                         return "Roll";
                     case WebApplication1.Models.Turn.Action.Sort:
                         return "Sort";
@@ -415,8 +417,6 @@ namespace WebApplication1.Models
                 }
             }
         }
-
-
     }
 }
 
