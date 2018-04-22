@@ -107,7 +107,15 @@ namespace WebApplication1.Models
             if (Hand.Dice.FindAll(x => x.FaceType == DieFaceType.Footprints).Count() >= Hand.Dice.Count())
             {
                 // All dice in the hand are footprints, so there is nothing to sort.
-                NextAction = Action.RollQuit;
+                // Check for quit allowed.
+                if (AllowQuit)
+                {
+                    NextAction = Action.Roll;
+                }
+                else
+                {
+                    NextAction = Action.RollQuit;
+                }
             }
             else
             {
@@ -155,18 +163,32 @@ namespace WebApplication1.Models
                         }
                         else
                         {
-                            // If in final round or tiebreaker, don't allow quit unless tied.
-                            if ((RoundType == GameRoundType.FinalRound || RoundType == GameRoundType.TieBreaker) && BrainValue() < HighScore)
+                            // Check for quit allowed.
+                            if (AllowQuit)
                             {
-                                NextAction = Action.Draw;
+                                NextAction = Action.DrawQuit;
                             }
                             else
                             {
-                                NextAction = Action.DrawQuit;
+                                NextAction = Action.Draw;
                             }
                         }
                     }
                 }
+            }
+        }
+
+        private bool AllowQuit
+        {
+            get
+            {
+                bool result = true;
+                // If in final round or tiebreaker, don't allow quit unless tied or leading.
+                if ((RoundType == GameRoundType.FinalRound || RoundType == GameRoundType.TieBreaker) && BrainValue() < HighScore)
+                {
+                    result = false;
+                }
+                return result;
             }
         }
 
