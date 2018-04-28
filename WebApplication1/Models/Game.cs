@@ -89,33 +89,30 @@ namespace WebApplication1.Models
                 RoundType = GameRoundType.FinalRound;
                 StartingPlayerIndex = ActivePlayerIndex;
             }
-            else
+            // Check for last round or tie breaker.
+            else if (RoundType == GameRoundType.FinalRound || RoundType == GameRoundType.TieBreaker)
             {
-                // Check last round or tie breaker.
-                if (RoundType == GameRoundType.FinalRound || RoundType == GameRoundType.TieBreaker)
+                // Flag player as out if they are less than the high score.
+                if (Players[ActivePlayerIndex].Score < HighScore)
                 {
-                    // Flag player as out if they are less than the high score.
-                    if (Players[ActivePlayerIndex].Score < HighScore)
+                    Players[ActivePlayerIndex].IsOut = true;
+                }
+                // Check if next player is the starting player. This means the round is done.
+                if (NextPlayerIndex() == StartingPlayerIndex)
+                {
+                    // Set the winning player if there is only one player with the high score.
+                    if (Players.Count(x => x.Score == HighScore) == 1)
                     {
-                        Players[ActivePlayerIndex].IsOut = true;
+                        // Game is over.
+                        RoundType = GameRoundType.GameOver;
+                        WinnerPlayerIndex = Players.FindIndex(x => x.Score == HighScore);
                     }
-                    // Check if next player is the starting player. This means the round is done.
-                    if (NextPlayerIndex() == StartingPlayerIndex)
+                    else
                     {
-                        // Set the winning player if there is only one player with the high score.
-                        if (Players.Count(x => x.Score == HighScore) == 1)
-                        {
-                            // Game is over.
-                            RoundType = GameRoundType.GameOver;
-                            WinnerPlayerIndex = Players.FindIndex(x => x.Score == HighScore);
-                        }
-                        else
-                        {
-                            // Final round is done. There is no winner. It is now a tiebreaker.
-                            RoundType = GameRoundType.TieBreaker;
-                            // Reset the starting player.
-                            StartingPlayerIndex = NextPlayerIndex();
-                        }
+                        // Final round is done. There is no winner. It is now a tiebreaker.
+                        RoundType = GameRoundType.TieBreaker;
+                        // Reset the starting player.
+                        StartingPlayerIndex = NextPlayerIndex();
                     }
                 }
             }
@@ -138,7 +135,6 @@ namespace WebApplication1.Models
                 return Players.Max(x => x.Score);
             }
         }
-
 
         public GameRoundType RoundType { get; set; }
 

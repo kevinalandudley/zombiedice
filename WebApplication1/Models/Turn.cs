@@ -13,12 +13,12 @@ namespace WebApplication1.Models
         {
         }
 
-        public Turn(GameRoundType roundType, int highscore)
+        public Turn(GameRoundType roundType, int highScore)
         {
             RoundType = roundType;
-            HighScore = highscore;
-            NextAction = Action.Draw;
-            _Cup = new DieCollection();
+            HighScore = highScore;
+            LastAction = Action.Start;
+            Cup = new DieCollection();
             Hand = new DieCollection();
             Keep = new DieCollection();
         }
@@ -29,30 +29,31 @@ namespace WebApplication1.Models
 
         public int HighScore { get; set; }
 
-        public DieCollection _Cup;
-        public DieCollection Cup
+        public DieCollection Cup { get; set; }
+        private DieCollection _Cup
         {
             get
             {
                 // Fill the cup if it is empty.
-                if (_Cup.Dice.Count == 0)
+                if (Cup.Dice.Count == 0)
                 {
+                    // This is the first time the cup is filled if there are no dice in the hand or keep.
+                    bool isFirstFill = Hand.Dice.Count == 0 && Keep.Dice.Count == 0;
                     foreach (DieKind kind in System.Enum.GetValues(typeof(DieKind)))
                     {
                         // Santa is never re-added to the cup.
-                        if (kind != DieKind.Santa || !CupWasFilled)
+                        if (isFirstFill || kind != DieKind.Santa)
                         {
                             // Fill the cup with the maximum number of dice for for this die type.
                             // Dice in the hand and shotguns in the keep are not re-added to the cup.
-                            while (CupMaxDieCount(kind) > (_Cup.DieCount(kind) + Hand.DieCount(kind) + Keep.DieCount(kind, DieFaceType.Shotgun)))
+                            while (CupMaxDieCount(kind) > (Cup.DieCount(kind) + Hand.DieCount(kind) + Keep.DieCount(kind, DieFaceType.Shotgun)))
                             {
-                                _Cup.Dice.Add(new Die(kind));
+                                Cup.Dice.Add(new Die(kind));
                             }
                         }
                     }
-                    CupWasFilled = true;
                 }
-                return _Cup;
+                return Cup;
             }
         }
 
@@ -77,50 +78,32 @@ namespace WebApplication1.Models
             }
         }
 
-        public bool CupWasFilled { get; set; }
-
         public DieCollection Hand { get; set; }
 
         public DieCollection Keep { get; set; }
 
         public void Draw()
         {
-            while (Hand.Dice.Count < 3)
+            while (Hand.Dice.Count < 3 && _Cup.Dice.Count > 0)
             {
                 // Get a random die from the cup.
-                Die die = Cup.Dice[randomGenerator.Next(0, Cup.Dice.Count)];
+                Die die = _Cup.Dice[randomGenerator.Next(0, _Cup.Dice.Count)];
                 // Roll the die so that it starts with a random face in the hand.
                 die.Roll();
                 // Add the die to the hand and remove it from the cup.
                 Hand.Dice.Add(die);
-                _Cup.Dice.Remove(die);
+                Cup.Dice.Remove(die);
             }
-            // Set the next action.
-            NextAction = Action.Roll;
+            // Set last action.
+            LastAction = Action.Draw;
         }
 
         public void Roll()
         {
             // Roll the hand.
             Hand.Roll();
-            // Set the next action.
-            if (Hand.Dice.FindAll(x => x.FaceType == DieFaceType.Footprints).Count() >= Hand.Dice.Count())
-            {
-                // All dice in the hand are footprints, so there is nothing to sort.
-                // Check for quit allowed.
-                if (AllowQuit)
-                {
-                    NextAction = Action.Roll;
-                }
-                else
-                {
-                    NextAction = Action.RollQuit;
-                }
-            }
-            else
-            {
-                NextAction = Action.Sort;
-            }
+            // Set last action.
+            LastAction = Action.Roll;
         }
 
         public void Sort()
@@ -128,68 +111,38 @@ namespace WebApplication1.Models
             // Sort Energy gets runners.
             if (SortEnergyGetsRunners())
             {
-                NextAction = Action.Sort;
+            }
+            // Sort Hunk saves Hottie.
+            else if (SortShotgunSavesBrain(DieKind.Hunk, DieKind.Hottie))
+            {
+            }
+            // Sort Hottie saves Hunk.
+            else if (SortShotgunSavesBrain(DieKind.Hottie, DieKind.Hunk))
+            {
             }
             else
             {
-                // Sort Hunk saves Hottie.
-                if (SortShotgunSavesBrain(DieKind.Hunk, DieKind.Hottie))
+                // Move kept dice from the hand to the keep.
+                foreach (var die in Hand.Dice.ToList())
                 {
-                    NextAction = Action.Sort;
-                }
-                else
-                {
-                    // Sort Hottie saves Hunk.
-                    if (SortShotgunSavesBrain(DieKind.Hottie, DieKind.Hunk))
+                    // Footprints are not removed from the hand.
+                    if (die.FaceType != DieFaceType.Footprints)
                     {
-                        NextAction = Action.Sort;
-                    }
-                    else
-                    {
-                        // Move kept dice from the hand to the keep.
-                        foreach (var die in Hand.Dice.ToList())
-                        {
-                            // Footprints are not removed from the hand.
-                            if (die.FaceType != DieFaceType.Footprints)
-                            {
-                                Keep.Dice.Add(die);
-                                Hand.Dice.Remove(die);
-                            }
-                        }
-                        // Check if shotgunned.
-                        if (IsShotgunned())
-                        {
-                            NextAction = Action.Quit;
-                        }
-                        else
-                        {
-                            // Check for quit allowed.
-                            if (AllowQuit)
-                            {
-                                NextAction = Action.DrawQuit;
-                            }
-                            else
-                            {
-                                NextAction = Action.Draw;
-                            }
-                        }
+                        Keep.Dice.Add(die);
+                        Hand.Dice.Remove(die);
                     }
                 }
+
             }
+            // Set last action.
+            LastAction = Action.Sort;
         }
 
-        private bool AllowQuit
+        private bool IsSorted()
         {
-            get
-            {
-                bool result = true;
-                // If in final round or tiebreaker, don't allow quit unless tied or leading.
-                if ((RoundType == GameRoundType.FinalRound || RoundType == GameRoundType.TieBreaker) && BrainValue() < HighScore)
-                {
-                    result = false;
-                }
-                return result;
-            }
+            // Hand is sorted if there are only footprints left and no other sort actions are needed.
+            return Hand.DieCount(DieFaceType.Footprints) == Hand.Dice.Count && !HasEnergyGetsRunners() && 
+                   !HasShotgunSavesBrain(DieKind.Hunk, DieKind.Hottie) && !HasShotgunSavesBrain(DieKind.Hottie, DieKind.Hunk);
         }
 
         private bool HasEnergyGetsRunners()
@@ -215,10 +168,9 @@ namespace WebApplication1.Models
         bool SortEnergyGetsRunners()
         {
             bool result = false;
-            // Check if has energy gets runners.
             if (HasEnergyGetsRunners())
             {
-                // Flip all green footprints in the hand to brains.
+                // Change all green footprints in the hand to brains.
                 foreach (var die in Hand.Dice)
                 {
                     if (die.Kind == DieKind.Green && die.FaceType == DieFaceType.Footprints)
@@ -228,13 +180,10 @@ namespace WebApplication1.Models
                             die.Face = DieFace.Brain;
                             result = true;
                         }
-                        else
+                        else if (die.Faces.Contains(DieFace.DoubleBrain))
                         {
-                            if (die.Faces.Contains(DieFace.DoubleBrain))
-                            {
-                                die.Face = DieFace.DoubleBrain;
-                                result = true;
-                            }
+                            die.Face = DieFace.DoubleBrain;
+                            result = true;
                         }
                     }
                 }
@@ -253,7 +202,7 @@ namespace WebApplication1.Models
                 Die brainDie = Hand.GetDie(brainDieKind, DieFaceType.Brain);
                 if (brainDie != null)
                 {
-                    _Cup.Dice.Add(brainDie);
+                    Cup.Dice.Add(brainDie);
                     Hand.Dice.Remove(brainDie);
                     result = true;
                 }
@@ -262,7 +211,7 @@ namespace WebApplication1.Models
                     brainDie = Keep.GetDie(brainDieKind, DieFaceType.Brain);
                     if (brainDie != null)
                     {
-                        _Cup.Dice.Add(brainDie);
+                        Cup.Dice.Add(brainDie);
                         Keep.Dice.Remove(brainDie);
                         result = true;
                     }
@@ -271,51 +220,143 @@ namespace WebApplication1.Models
             return result;
         }
 
+
+        public enum Action
+        {
+            Start,
+            Draw,
+            Roll,
+            Sort,
+            Quit
+        }
+
+        public Action LastAction { get; set; }
+
+        public Action NextAction
+        {
+            get
+            {
+                switch (LastAction)
+                {
+                    case Action.Start:
+                        return Action.Draw;
+                    case Action.Draw:
+                        return Action.Roll;
+                    case Action.Roll:
+                        // If all dice in the hand are footprints there is nothing to sort, so re-roll.
+                        return (Hand.Dice.Exists(x => x.FaceType != DieFaceType.Footprints)) ? Action.Sort : Action.Roll;
+                    case Action.Sort:
+                        // Check if hand is sorted.
+                        if (IsSorted())
+                        {
+                            // Next action is to draw unless player is shotgunned.
+                            return (IsShotgunned()) ? Action.Quit : Action.Draw;
+                        }
+                        else
+                        {
+                            return Action.Sort;
+                        }
+                    case Action.Quit:
+                        return Action.Quit;
+                    default:
+                        return Action.Draw;
+                }
+            }
+        }
+
+        public string NextActionName
+        {
+            get
+            {
+                switch (NextAction)
+                {
+                    case Action.Draw:
+                        return "Draw";
+                    case Action.Roll:
+                        return "Roll";
+                    case Action.Sort:
+                        return "Sort";
+                    case Action.Quit:
+                        return "Quit";
+                    default:
+                        return "";
+                }
+            }
+        }
+
+        public bool AllowQuit()
+        {
+            // Only allow quit if the next action is quit or if the next action is draw and it is not the start of the turn.
+            // Don't allow quit if in the final round or tiebreaker unless tied or leading.
+            return (NextAction == Action.Quit ||
+                   ((NextAction == Action.Draw && LastAction != Action.Start) &&
+                    !((RoundType == GameRoundType.FinalRound || RoundType == GameRoundType.TieBreaker) && BrainValue() < HighScore)));
+        }
+
+        private enum TurnMessageId
+        {
+            None,
+            EnergyGetsRunners,
+            HunkSavesHottie,
+            HottieSavesHunk,
+            Shotgunned,
+            FinalRound,
+            TieBreaker,
+            GameOver
+        }
+
         private TurnMessageId MessageId
         {
             get
             {
                 // Get sort message.
-                if (NextAction == Action.Sort && HasEnergyGetsRunners())
+                if (NextAction == Action.Sort || NextAction == Action.Quit)
                 {
-                    return TurnMessageId.EnergyGetsRunners;
-                }
-                else
-                {
-                    if (NextAction == Action.Sort && HasShotgunSavesBrain(DieKind.Hunk, DieKind.Hottie))
+                    if (HasEnergyGetsRunners())
+                    {
+                        return TurnMessageId.EnergyGetsRunners;
+                    }
+                    else if (HasShotgunSavesBrain(DieKind.Hunk, DieKind.Hottie))
                     {
                         return TurnMessageId.HunkSavesHottie;
                     }
+                    else if (HasShotgunSavesBrain(DieKind.Hottie, DieKind.Hunk))
+                    {
+                        return TurnMessageId.HottieSavesHunk;
+                    }
+                    else if (IsShotgunned())
+                    {
+                        return TurnMessageId.Shotgunned;
+                    }
                     else
                     {
-                        if (NextAction == Action.Sort && HasShotgunSavesBrain(DieKind.Hottie, DieKind.Hunk))
-                        {
-                            return TurnMessageId.HottieSavesHunk;
-                        }
-                        else
-                        {
-                            if ((NextAction == Action.Sort || NextAction == Action.Quit) && IsShotgunned())
-                            {
-                                return TurnMessageId.Shotgunned;
-                            }
-                            else
-                            {
-                                // Get round message.
-                                // Message for round type.
-                                switch (RoundType)
-                                {
-                                    case GameRoundType.GameOver:
-                                        return TurnMessageId.GameOver;
-                                    case GameRoundType.FinalRound:
-                                        return TurnMessageId.FinalRound;
-                                    case GameRoundType.TieBreaker:
-                                        return TurnMessageId.TieBreaker;
-                                    default:
-                                        return TurnMessageId.None;
-                                }
-                            }
-                        }
+                        // Get round message.
+                        return RoundMessageId;
                     }
+                }
+                else
+                {
+                    // Get round message.
+                    return RoundMessageId;
+                }
+            }
+        }
+
+        private TurnMessageId RoundMessageId
+        {
+            get
+            {
+                // Message ID for round type.
+                switch (RoundType)
+                {
+                    case GameRoundType.GameOver:
+                        return TurnMessageId.GameOver;
+                    case GameRoundType.FinalRound:
+                        return TurnMessageId.FinalRound;
+                    case GameRoundType.TieBreaker:
+                        return TurnMessageId.TieBreaker;
+                    default:
+                        return TurnMessageId.None;
                 }
             }
         }
@@ -327,7 +368,7 @@ namespace WebApplication1.Models
                 switch (MessageId)
                 {
                     case TurnMessageId.EnergyGetsRunners:
-                        return "Energy Gets Runners!";
+                        return "Energy!";
                     case TurnMessageId.HunkSavesHottie:
                         return "Hunk Saves Hottie!";
                     case TurnMessageId.HottieSavesHunk:
@@ -346,6 +387,12 @@ namespace WebApplication1.Models
             }
         }
 
+        public enum TurnMessageType
+        {
+            SortAction,
+            RoundStatus
+        }
+
         public TurnMessageType MessageType
         {
             get
@@ -357,32 +404,10 @@ namespace WebApplication1.Models
                     case TurnMessageId.HottieSavesHunk:
                     case TurnMessageId.Shotgunned:
                         return TurnMessageType.SortAction;
-                    case TurnMessageId.GameOver:
-                    case TurnMessageId.FinalRound:
-                    case TurnMessageId.TieBreaker:
-                        return TurnMessageType.RoundStatus;
                     default:
-                        return TurnMessageType.SortAction;
+                        return TurnMessageType.RoundStatus;
                 }
             }
-        }
-
-        private enum TurnMessageId
-        {
-            None,
-            EnergyGetsRunners,
-            HunkSavesHottie,
-            HottieSavesHunk,
-            Shotgunned,
-            FinalRound,
-            TieBreaker,
-            GameOver
-        }
-
-        public enum TurnMessageType
-        {
-            SortAction,
-            RoundStatus
         }
 
         public int BrainValue()
@@ -395,37 +420,6 @@ namespace WebApplication1.Models
             return Keep.ShotgunValue();
         }
 
-        public enum Action
-        {
-            Draw,
-            DrawQuit,
-            Roll,
-            RollQuit,
-            Sort,
-            Quit
-        }
-
-        public Action NextAction { get; set; }
-
-        public string NextActionName
-        {
-            get
-            {
-                switch (NextAction)
-                {
-                    case WebApplication1.Models.Turn.Action.Draw:
-                    case WebApplication1.Models.Turn.Action.DrawQuit:
-                        return "Draw";
-                    case WebApplication1.Models.Turn.Action.Roll:
-                    case WebApplication1.Models.Turn.Action.RollQuit:
-                        return "Roll";
-                    case WebApplication1.Models.Turn.Action.Sort:
-                        return "Sort";
-                    default:
-                        return "";
-                }
-            }
-        }
     }
 }
 
