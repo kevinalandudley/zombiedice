@@ -11,10 +11,11 @@
     @Html.HiddenFor(model => model.Game.RoundType, new { @Value = Model.Game.RoundType })
     @Html.HiddenFor(model => model.Game.Turn.RoundType, new { @Value = Model.Game.Turn.RoundType })
     @Html.HiddenFor(model => model.Game.Turn.HighScore, new { @Value = Model.Game.Turn.HighScore })
+    @Html.HiddenFor(model => model.Game.Turn.LastAction, new { @Value = Model.Game.Turn.LastAction })
 
     <table border="0">
 
-        <!--Logo and name row-->
+        <!--Row for logo and active player name-->
         <tr>
             <td colspan="2"><img src="~/Content/ZombieDiceLogo.gif" /></td>
             @if (Model.Game.RoundType == WebApplication1.Models.GameRoundType.GameOver)
@@ -27,7 +28,7 @@
             }
         </tr>
 
-        <!--Players table, brain count, turn message, and shotgun count row-->
+        <!--Row for players table, brain count, turn message, and shotgun count-->
         <tr style="font-size:30px; font-weight:bold" valign="top">
 
             <!--Players table-->
@@ -94,7 +95,7 @@
             <td width="265px">Shots: @Model.Game.Turn.ShotgunValue() / 3</td>
         </tr>
 
-        <!--Dice row  -->
+        <!--Row for dice-->
         <tr>
             @*<td width="250px"></td>*@
             <td width="40px"></td>
@@ -120,12 +121,12 @@
             <td width="10px"></td>
 
             <!--Hand-->
-            <td width="275px">
-                <table width="100%">
+            <td width="275px" style="vertical-align:top">
+                <table width="100%" style="vertical-align:top">
 
                     <!--Hand dice-->
-                    <tr height="85">
-                        <td valign="top" style="border:2px solid black">
+                    <tr height="90" style="vertical-align:top">
+                        <td valign="top" style="border:2px solid black" style="vertical-align:top">
                             @{
                                 for (int i = 0; i < Model.Game.Turn.Hand.Dice.Count; i++)
                                 {
@@ -146,31 +147,33 @@
                     </tr>
 
                     <!--Hand buttons-->
-                    <tr>
+                    <tr style="vertical-align:top">
                         <td>
                             @{
                                 if (Model.Game.RoundType != WebApplication1.Models.GameRoundType.GameOver)
                                 {
                                     string buttonName = Model.Game.Turn.NextActionName;
-                                    bool hasQuit = (Model.Game.Turn.NextAction == WebApplication1.Models.Turn.Action.DrawQuit || Model.Game.Turn.NextAction == WebApplication1.Models.Turn.Action.Quit);
+                                    if (Model.Game.Turn.NextAction == WebApplication1.Models.Turn.Action.Quit)
+                                    {
+                                        buttonName = "";
+                                    }
                                     if (buttonName != "")
                                     {
-                                        string buttonWidth = (hasQuit) ? "49%" : "100%";
+                                        string buttonWidth = (Model.Game.Turn.AllowQuit()) ? "49%" : "100%";
                                         <input type="submit" id="@buttonName" name="command" value="@buttonName" style="height:60px;  width:@buttonWidth; font-size:42px; font-family:poor richard; font-weight:bold;
-                                               background: -moz-linear-gradient(top, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 100%); /* FF3.6-15 */
-background: -webkit-linear-gradient(top, rgba(0,0,0,1) 0%,rgba(0,0,0,1) 100%); /* Chrome10-25,Safari5.1-6 */
-background: linear-gradient(to bottom, rgba(0,0,0,1) 0%,rgba(0,0,0,1) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a6000000', endColorstr='#00000000',GradientType=0 ); /* IE6-9 */ color:#2D4A6A;" />
+                                                background -moz-linear-gradient(top, rgba(231,229,207,1) 0%, rgba(114,109,90,1) 100%); />* FF3.6-15 */
+                                        background: -webkit-linear-gradient(top, rgba(231,229,207,1) 0%, rgba(114,109,90,1) 100%); /* Chrome10-25,Safari5.1-6 */
+                                        background: linear-gradient(to bottom, rgba(231,229,207,1) 0%, rgba(114,109,90,1) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+                                        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a6000000', endColorstr='#00000000',GradientType=0 ); /* IE6-9 */ color:#2D4A6A;" />
                                     }
-                                    if (hasQuit)
+                                    if (Model.Game.Turn.AllowQuit())
                                     {
                                         string buttonWidth = (buttonName != "") ? "49%" : "100%";
-                                        <input type="submit" id="Quit" name="command" value="Quit" style="height:60px; width:@buttonWidth; font-size:42px; font-family:poor richard; font-weight:bold; 
-                                               
-background: -moz-linear-gradient(top, rgba(231,229,207,1) 0%, rgba(114,109,90,1) 100%); /* FF3.6-15 */
-background: -webkit-linear-gradient(top, rgba(231,229,207,1) 0%,rgba(114,109,90,1) 100%); /* Chrome10-25,Safari5.1-6 */
-background: linear-gradient(to bottom, rgba(231,229,207,1) 0%,rgba(114,109,90,1) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e7e5cf', endColorstr='#726d5a',GradientType=0 ); /* IE6-9 */ color:#9A232B;" />
+                                        <input type="submit" id="Quit" name="command" value="Quit" style="height:60px; width:@buttonWidth; font-size:42px; font-family:poor richard; font-weight:bold;
+                                                background -moz-linear-gradient(top, rgba(231,229,207,1) 0%, rgba(114,109,90,1) 100%); />* FF3.6-15 */
+                                        background: -webkit-linear-gradient(top, rgba(231,229,207,1) 0%,rgba(114,109,90,1) 100%); /* Chrome10-25,Safari5.1-6 */
+                                        background: linear-gradient(to bottom, rgba(231,229,207,1) 0%,rgba(114,109,90,1) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+                                        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e7e5cf', endColorstr='#726d5a',GradientType=0 ); /* IE6-9 */ color:#9A232B;" />
                                     }
                                 }
                             }
@@ -178,6 +181,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e7e5cf', end
                     </tr>
                 </table>
             </td>
+
             <td width="10px"></td>
 
             <!--Shots-->
@@ -202,15 +206,14 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e7e5cf', end
 
         <!--Cup data-->
         @{
-            @Html.HiddenFor(model => model.Game.Turn.CupWasFilled, new { @Value = Model.Game.Turn.CupWasFilled })
-            for (int i = 0; i < Model.Game.Turn._Cup.Dice.Count; i++)
+            for (int i = 0; i < Model.Game.Turn.Cup.Dice.Count; i++)
             {
-                @Html.HiddenFor(model => model.Game.Turn._Cup.Dice[i].BrainValue, new { @Value = Model.Game.Turn._Cup.Dice[i].BrainValue })
-                @Html.HiddenFor(model => model.Game.Turn._Cup.Dice[i].Face, new { @Value = Model.Game.Turn._Cup.Dice[i].Face })
-                @Html.HiddenFor(model => model.Game.Turn._Cup.Dice[i].FaceType, new { @Value = Model.Game.Turn._Cup.Dice[i].FaceType })
-                @Html.HiddenFor(model => model.Game.Turn._Cup.Dice[i].Kind, new { @Value = Model.Game.Turn._Cup.Dice[i].Kind })
-                @Html.HiddenFor(model => model.Game.Turn._Cup.Dice[i].ShotgunValue, new { @Value = Model.Game.Turn._Cup.Dice[i].ShotgunValue })
-                @Html.HiddenFor(model => model.Game.Turn._Cup.Dice[i].ImageName, new { @Value = Model.Game.Turn._Cup.Dice[i].ImageName })
+                @Html.HiddenFor(model => model.Game.Turn.Cup.Dice[i].BrainValue, new { @Value = Model.Game.Turn.Cup.Dice[i].BrainValue })
+                @Html.HiddenFor(model => model.Game.Turn.Cup.Dice[i].Face, new { @Value = Model.Game.Turn.Cup.Dice[i].Face })
+                @Html.HiddenFor(model => model.Game.Turn.Cup.Dice[i].FaceType, new { @Value = Model.Game.Turn.Cup.Dice[i].FaceType })
+                @Html.HiddenFor(model => model.Game.Turn.Cup.Dice[i].Kind, new { @Value = Model.Game.Turn.Cup.Dice[i].Kind })
+                @Html.HiddenFor(model => model.Game.Turn.Cup.Dice[i].ShotgunValue, new { @Value = Model.Game.Turn.Cup.Dice[i].ShotgunValue })
+                @Html.HiddenFor(model => model.Game.Turn.Cup.Dice[i].ImageName, new { @Value = Model.Game.Turn.Cup.Dice[i].ImageName })
             }
         }
     </table>
