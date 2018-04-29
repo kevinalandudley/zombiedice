@@ -27,7 +27,7 @@ namespace WebApplication1.Models
             StartingPlayerIndex = -1;
             WinnerPlayerIndex = -1;
             RoundType = GameRoundType.Regular;
-            Turn = new Turn(RoundType, HighScore);
+            Turn = new Turn(RoundType, Players[ActivePlayerIndex].Score, HighScore);
         }
 
         public List<Player> Players { get; set; }
@@ -120,7 +120,7 @@ namespace WebApplication1.Models
             if (RoundType != GameRoundType.GameOver)
             {
                 ActivePlayerIndex = NextPlayerIndex();
-                Turn = new Turn(RoundType, HighScore);
+                Turn = new Turn(RoundType, Players[ActivePlayerIndex].Score, HighScore);
             }
             else
             {

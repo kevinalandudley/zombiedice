@@ -9,13 +9,14 @@ namespace WebApplication1.Models
     {
 
         public Turn()
-            : this(GameRoundType.Regular, 0)
+            : this(GameRoundType.Regular, 0, 0)
         {
         }
 
-        public Turn(GameRoundType roundType, int highScore)
+        public Turn(GameRoundType roundType, int playerBrainValue, int highScore)
         {
             RoundType = roundType;
+            PlayerBrainValue = playerBrainValue;
             HighScore = highScore;
             LastAction = Action.Start;
             Cup = new DieCollection();
@@ -28,6 +29,8 @@ namespace WebApplication1.Models
         public GameRoundType RoundType { get; set; }
 
         public int HighScore { get; set; }
+
+        public int PlayerBrainValue { get; set; }
 
         public DieCollection Cup { get; set; }
         private DieCollection _Cup
@@ -220,7 +223,6 @@ namespace WebApplication1.Models
             return result;
         }
 
-
         public enum Action
         {
             Start,
@@ -290,7 +292,7 @@ namespace WebApplication1.Models
             // Don't allow quit if in the final round or tiebreaker unless tied or leading.
             return (NextAction == Action.Quit ||
                    ((NextAction == Action.Draw && LastAction != Action.Start) &&
-                    !((RoundType == GameRoundType.FinalRound || RoundType == GameRoundType.TieBreaker) && BrainValue() < HighScore)));
+                    !((RoundType == GameRoundType.FinalRound || RoundType == GameRoundType.TieBreaker) && PlayerBrainValue + BrainValue() < HighScore)));
         }
 
         private enum TurnMessageId
@@ -419,6 +421,12 @@ namespace WebApplication1.Models
         {
             return Keep.ShotgunValue();
         }
+
+        public int TurnBrainValue()
+        {
+            return Hand.BrainValue() + Keep.BrainValue();
+        }
+
 
     }
 }
