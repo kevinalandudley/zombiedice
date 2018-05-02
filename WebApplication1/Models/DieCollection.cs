@@ -51,15 +51,26 @@ namespace WebApplication1.Models
             return Dice.FirstOrDefault(x => x.Kind == kind && x.FaceType == faceType);
         }
 
-        public int BrainValue()
+        public bool IsAll(DieFaceType faceType)
         {
-            int a = Dice.Sum(x => x.BrainValue);
-            return Dice.Sum(x => x.BrainValue);
+            return (Dice.Exists(x => x.FaceType != faceType));
         }
 
-        public int ShotgunValue()
+        public int BrainValue
         {
-            return Dice.Sum(x => x.ShotgunValue);
+            get
+            {
+                int a = Dice.Sum(x => x.BrainValue);
+                return Dice.Sum(x => x.BrainValue);
+            }
+        }
+
+        public int ShotgunValue
+        {
+            get
+            {
+                return Dice.Sum(x => x.ShotgunValue);
+            }
         }
 
     }

@@ -41,13 +41,13 @@ namespace WebApplication1.Models
                 if (Cup.Dice.Count == 0)
                 {
                     // This is the first time the cup is filled if there are no dice in the hand or keep.
-                    bool isFirstFill = Hand.Dice.Count == 0 && Keep.Dice.Count == 0;
+                    bool isFirstFill = Hand.Dice.Count + Keep.Dice.Count == 0;
                     foreach (DieKind kind in System.Enum.GetValues(typeof(DieKind)))
                     {
                         // Santa is never re-added to the cup.
                         if (isFirstFill || kind != DieKind.Santa)
                         {
-                            // Fill the cup with the maximum number of dice for for this die type.
+                            // Fill the cup with the maximum number of dice for this die type.
                             // Dice in the hand and shotguns in the keep are not re-added to the cup.
                             while (CupMaxDieCount(kind) > (Cup.DieCount(kind) + Hand.DieCount(kind) + Keep.DieCount(kind, DieFaceType.Shotgun)))
                             {
@@ -165,7 +165,7 @@ namespace WebApplication1.Models
         public bool IsShotgunned()
         {
             // Return if shotguns in hand and keep are over maximum shotgun value.
-            return Hand.ShotgunValue() + Keep.ShotgunValue() >= 3;
+            return Hand.ShotgunValue + Keep.ShotgunValue >= 3;
         }
 
         bool SortEnergyGetsRunners()
@@ -246,7 +246,7 @@ namespace WebApplication1.Models
                         return Action.Roll;
                     case Action.Roll:
                         // If all dice in the hand are footprints there is nothing to sort, so re-roll.
-                        return (Hand.Dice.Exists(x => x.FaceType != DieFaceType.Footprints)) ? Action.Sort : Action.Roll;
+                        return (Hand.IsAll(DieFaceType.Footprints)) ? Action.Sort : Action.Roll;
                     case Action.Sort:
                         // Check if hand is sorted.
                         if (IsSorted())
@@ -288,11 +288,30 @@ namespace WebApplication1.Models
 
         public bool AllowQuit()
         {
-            // Only allow quit if the next action is quit or if the next action is draw and it is not the start of the turn.
-            // Don't allow quit if in the final round or tiebreaker unless tied or leading.
-            return (NextAction == Action.Quit ||
-                   ((NextAction == Action.Draw && LastAction != Action.Start) &&
-                    !((RoundType == GameRoundType.FinalRound || RoundType == GameRoundType.TieBreaker) && PlayerBrainValue + BrainValue() < HighScore)));
+            bool result = false;
+            // Always allow quit if the next action is quit.
+            if (NextAction == Action.Quit)
+            {
+                result = true;
+            }
+            else
+            {
+                // Don't allow quit if in the final round or tiebreaker unless tied or leading.
+                if ((RoundType != GameRoundType.FinalRound && RoundType != GameRoundType.TieBreaker) || PlayerBrainValue + BrainValue >= HighScore)
+                {
+                    // Allow quit if next action is draw unless it is the start of the turn.
+                    if (NextAction == Action.Draw && LastAction != Action.Start)
+                    {
+                        result = true;
+                    }
+                    // Allow quit when re-rolling.
+                    else if (NextAction == Action.Roll && LastAction != Action.Draw)
+                    {
+                        result = true;
+                    }
+                }
+            }
+            return result;
         }
 
         private enum TurnMessageId
@@ -302,6 +321,8 @@ namespace WebApplication1.Models
             HunkSavesHottie,
             HottieSavesHunk,
             Shotgunned,
+            Leading,
+            Tied,
             FinalRound,
             TieBreaker,
             GameOver
@@ -348,18 +369,40 @@ namespace WebApplication1.Models
         {
             get
             {
-                // Message ID for round type.
-                switch (RoundType)
+                TurnMessageId result = TurnMessageId.None;
+                // Message ID for game over.
+                if (RoundType == GameRoundType.GameOver)
                 {
-                    case GameRoundType.GameOver:
-                        return TurnMessageId.GameOver;
-                    case GameRoundType.FinalRound:
-                        return TurnMessageId.FinalRound;
-                    case GameRoundType.TieBreaker:
-                        return TurnMessageId.TieBreaker;
-                    default:
-                        return TurnMessageId.None;
+                    result = TurnMessageId.GameOver;
                 }
+                // Message ID for final round or tiebreaker and leading or tied.
+                else if ((RoundType == GameRoundType.FinalRound || RoundType == GameRoundType.TieBreaker || PlayerBrainValue + BrainValue >= 13) && AllowQuit())
+                {
+                    if (PlayerBrainValue + BrainValue == HighScore)
+                    {
+                        result = TurnMessageId.Tied;
+                    }
+                    else if (PlayerBrainValue + BrainValue > HighScore)
+                    {
+                        result = TurnMessageId.Leading;
+                    }
+                }
+                if (result == TurnMessageId.None)
+                {
+                    // Message ID for round type.
+                    switch (RoundType)
+                    {
+                        case GameRoundType.GameOver:
+                            return TurnMessageId.GameOver;
+                        case GameRoundType.FinalRound:
+                            return TurnMessageId.FinalRound;
+                        case GameRoundType.TieBreaker:
+                            return TurnMessageId.TieBreaker;
+                        default:
+                            return TurnMessageId.None;
+                    }
+                }
+                return result;
             }
         }
 
@@ -377,8 +420,12 @@ namespace WebApplication1.Models
                         return "Hottie Saves Hunk!";
                     case TurnMessageId.Shotgunned:
                         return "Shotgunned!";
+                    case TurnMessageId.Tied:
+                        return "Tied!";
+                    case TurnMessageId.Leading:
+                        return "Leading!";
                     case TurnMessageId.GameOver:
-                        return "Game Over!";
+                        return "";
                     case TurnMessageId.FinalRound:
                         return "Last Round!";
                     case TurnMessageId.TieBreaker:
@@ -392,6 +439,7 @@ namespace WebApplication1.Models
         public enum TurnMessageType
         {
             SortAction,
+            Standing,
             RoundStatus
         }
 
@@ -406,27 +454,38 @@ namespace WebApplication1.Models
                     case TurnMessageId.HottieSavesHunk:
                     case TurnMessageId.Shotgunned:
                         return TurnMessageType.SortAction;
+                    case TurnMessageId.Tied:
+                    case TurnMessageId.Leading:
+                        return TurnMessageType.Standing;
                     default:
                         return TurnMessageType.RoundStatus;
                 }
             }
         }
 
-        public int BrainValue()
+        public int BrainValue
         {
-            return Keep.BrainValue();
+            get
+            {
+                return Keep.BrainValue;
+            }
         }
 
-        public int ShotgunValue()
+        public int ShotgunValue
         {
-            return Keep.ShotgunValue();
+            get
+            {
+                return Keep.ShotgunValue;
+            }
         }
 
-        public int TurnBrainValue()
+        public int TurnBrainValue
         {
-            return Hand.BrainValue() + Keep.BrainValue();
+            get
+            {
+                return Hand.BrainValue + Keep.BrainValue;
+            }
         }
-
 
     }
 }
@@ -444,9 +503,9 @@ namespace WebApplication1.Models
 // Cops & Robbers
 // 
 // Cop
-// 1. Jail - Turn is over - score brains in keep and ignore in the hand
-// 2. Police - Brains turn to runners
-// 3. Shield - Saves one shotgun (like helmet)
+// 1. Cop - Brains turn to runners
+// 2. Shield - Saves one shotgun (like helmet)
+// 3. Jail - Turn is over - score brains in keep and ignore in the hand
 // 4. Footprints
 // 5. Brain
 // 6. Brain 

@@ -34,39 +34,34 @@ namespace WebApplication1.Models
 
         public int ActivePlayerIndex { get; set; }
 
-        public int ActivePlayerBrainValue()
+        public int ActivePlayerBrainValue
         {
-            return Players[ActivePlayerIndex].Score + Turn.Keep.BrainValue();
+            get
+            {
+                return Players[ActivePlayerIndex].Score + Turn.Keep.BrainValue;
+            }
         }
 
-        private int NextPlayerIndex()
+        private int NextPlayerIndex
         {
-            // Find the next player that is not out.
-            int result = -1;
-            // Find the next player in the list after the active player.
-            if (ActivePlayerIndex < Players.Count() - 1)
+            get
             {
-                for (int i = ActivePlayerIndex + 1; i < Players.Count && result < 0; i++)
+                // Return the next player that is not out.
+                int result = -1;
+                int playerIndex = PlayerAfterIndex(ActivePlayerIndex);
+                while (result < 0 && playerIndex != ActivePlayerIndex)
                 {
-                    if (!Players[i].IsOut)
+                    if (!Players[playerIndex].IsOut)
                     {
-                        result = i;
+                        result = playerIndex;
+                    }
+                    else
+                    {
+                        playerIndex = PlayerAfterIndex(playerIndex);
                     }
                 }
+                return result;
             }
-            // Check for no player found.
-            if (result < 0)
-            {
-                // Find the first player in the list before the active player.
-                for (int i = 0; i < ActivePlayerIndex && result < 0; i++)
-                {
-                    if (!Players[i].IsOut)
-                    {
-                        result = i;
-                    }
-                }
-            }
-            return result;
         }
 
         public int StartingPlayerIndex { get; set; }
@@ -80,10 +75,10 @@ namespace WebApplication1.Models
             // Add brains to player score if not shotgunned.
             if (!Turn.IsShotgunned())
             {
-                Players[ActivePlayerIndex].Score += Turn.Keep.BrainValue();
+                Players[ActivePlayerIndex].Score += Turn.Keep.BrainValue;
             }
-            // Check for first player over 13. This sets the starting player for the last round.
-            if (StartingPlayerIndex < 0 && Players[ActivePlayerIndex].Score >= 13)
+            // Check for first player over 13. This sets the starting player for the final round.
+            if (RoundType == GameRoundType.Regular && Players[ActivePlayerIndex].Score >= 13)
             {
                 // It is now the final round.
                 RoundType = GameRoundType.FinalRound;
@@ -92,13 +87,16 @@ namespace WebApplication1.Models
             // Check for last round or tie breaker.
             else if (RoundType == GameRoundType.FinalRound || RoundType == GameRoundType.TieBreaker)
             {
-                // Flag player as out if they are less than the high score.
-                if (Players[ActivePlayerIndex].Score < HighScore)
+                // All players from the starting player to the active player are out if they are less than the high score.
+                for (int i = 0; i <= Players.Count - 1; i++)
                 {
-                    Players[ActivePlayerIndex].IsOut = true;
+                    if (Players[i].Score < HighScore && PlayerIndexIsBetween(i, StartingPlayerIndex, ActivePlayerIndex))
+                    {
+                        Players[i].IsOut = true;
+                    }
                 }
-                // Check if next player is the starting player. This means the round is done.
-                if (NextPlayerIndex() == StartingPlayerIndex)
+                // Check if the round is done.
+                if (RoundIsDone)
                 {
                     // Set the winning player if there is only one player with the high score.
                     if (Players.Count(x => x.Score == HighScore) == 1)
@@ -106,29 +104,60 @@ namespace WebApplication1.Models
                         // Game is over.
                         RoundType = GameRoundType.GameOver;
                         WinnerPlayerIndex = Players.FindIndex(x => x.Score == HighScore);
+                        ActivePlayerIndex = WinnerPlayerIndex;
+                        Turn = new Turn(GameRoundType.GameOver, Players[ActivePlayerIndex].Score, HighScore);
                     }
                     else
                     {
-                        // Final round is done. There is no winner. It is now a tiebreaker.
+                        // Final round is done. There is no winner. It is now a tiebreaker starting with the next player.
                         RoundType = GameRoundType.TieBreaker;
-                        // Reset the starting player.
-                        StartingPlayerIndex = NextPlayerIndex();
+                        StartingPlayerIndex = NextPlayerIndex;
                     }
                 }
             }
             // Set next player if the game is not over.
             if (RoundType != GameRoundType.GameOver)
             {
-                ActivePlayerIndex = NextPlayerIndex();
+                ActivePlayerIndex = NextPlayerIndex;
                 Turn = new Turn(RoundType, Players[ActivePlayerIndex].Score, HighScore);
-            }
-            else
-            {
-                Turn.RoundType = RoundType;
             }
         }
 
-        private int HighScore
+        private bool RoundIsDone
+        {
+            get
+            {
+                bool result = false;
+                // A "round" only occurs during the final round or tiebreaker.
+                if (RoundType == GameRoundType.FinalRound || RoundType == GameRoundType.TieBreaker)
+                {
+                    // Check if the next player (including any next players that are out) is the starting player.
+                    result = PlayerIndexIsBetween(StartingPlayerIndex, PlayerAfterIndex(ActivePlayerIndex), NextPlayerIndex);
+                }
+                return result;
+            }
+        }
+
+        private bool PlayerIndexIsBetween(int playerindex, int startPlayerIndex, int endPlayerIndex)
+        {
+            // Return if the player index is between the start player and the end player (wrappping around to the first player (0) when the end player is before the start player).
+            // The comparison includes the start and end players.
+            if (startPlayerIndex <= endPlayerIndex)
+            {
+                return (playerindex >= startPlayerIndex && playerindex <= endPlayerIndex);
+            }
+            else
+            {
+                return (playerindex >= startPlayerIndex || playerindex <= endPlayerIndex);
+            }
+        }
+
+        private int PlayerAfterIndex(int playerIndex)
+        {
+            return (playerIndex >= Players.Count - 1) ? 0 : playerIndex + 1;
+        }
+
+        public int HighScore
         {
             get
             {

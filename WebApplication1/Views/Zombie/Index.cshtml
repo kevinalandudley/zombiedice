@@ -14,11 +14,11 @@
     @Html.HiddenFor(model => model.Game.Turn.HighScore, new { @Value = Model.Game.Turn.HighScore })
     @Html.HiddenFor(model => model.Game.Turn.LastAction, new { @Value = Model.Game.Turn.LastAction })
 
-    <table border="0">
+    <table>
 
         <!--Row for logo and active player name-->
         <tr>
-            <td colspan="2"><img src="~/Content/ZombieDiceLogo.gif" /></td>
+            <td><img src="~/Content/ZombieDiceLogo.gif" style="width:300px"/></td>
             @if (Model.Game.RoundType == WebApplication1.Models.GameRoundType.GameOver)
             {
                 <td colspan="5" style="text-align:center; font-size:50px; font-weight:bold; font-family:Stencil; color:crimson; text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;">@Model.Game.Players[Model.Game.WinnerPlayerIndex].Name Wins!</td>
@@ -33,11 +33,11 @@
         <tr style="font-size:30px; font-weight:bold" valign="top">
 
             <!--Players table-->
-            <td width="250px" rowspan="2" valign="top" style="padding-top:10px">
-                <table border="1" width="100%" style="font-size:20px; border-color:black; border-collapse:collapse">
+            <td width="300px" rowspan="2" valign="top" style="padding-top:7px; padding-right:7px">
+                <table border="1" style="width:100%; font-size:20px; border-color:black; border-collapse:collapse; padding-top:20px">
                     <tr style="background-color:burlywood">
-                        <th>Player</th>
-                        <th>Score</th>
+                        <th style="text-align:left">Player</th>
+                        <th style="text-align:center">Score</th>
                     </tr>
                     @{
                         for (int i = 0; i < Model.Game.Players.Count(); i++)
@@ -46,21 +46,15 @@
                             var rowColor = "papayawhip";
                             if (@Model.Game.Players[i].IsOut)
                             {
-                                rowColor = "lightgrey";
+                                rowColor = "silver";
                             }
-                            else
+                            else if (i == (@Model.Game.ActivePlayerIndex))
                             {
-                                if (i == (@Model.Game.ActivePlayerIndex))
-                                {
-                                    rowColor = "red";
-                                }
-                                else
-                                {
-                                    if (i % 2 == 0)
-                                    {
-                                        rowColor = "wheat";
-                                    }
-                                }
+                                rowColor = "red";
+                            }
+                            else if (@Model.Game.HighScore >= 13 && @Model.Game.Players[i].Score >= @Model.Game.HighScore)
+                            {
+                                rowColor = "white";
                             }
                             <tr style="background-color:@rowColor">
                                 <td>@Model.Game.Players[i].Name</td>
@@ -70,45 +64,50 @@
                             @Html.HiddenFor(model => model.Game.Players[i].Score, new { @Value = Model.Game.Players[i].Score })
                             @Html.HiddenFor(model => model.Game.Players[i].IsOut, new { @Value = Model.Game.Players[i].IsOut })
                         }
-                        @Html.HiddenFor(model => model.Game.ActivePlayerIndex, new { @Value = Model.Game.ActivePlayerIndex })
-                        @Html.HiddenFor(model => model.Game.StartingPlayerIndex, new { @Value = Model.Game.StartingPlayerIndex })
                     }
+                    @Html.HiddenFor(model => model.Game.ActivePlayerIndex, new { @Value = Model.Game.ActivePlayerIndex })
+                    @Html.HiddenFor(model => model.Game.StartingPlayerIndex, new { @Value = Model.Game.StartingPlayerIndex })
                 </table>
             </td>
-            <td width="40px"></td>
 
             <!--Brian count-->
-            <td width="265px">Brains: @Model.Game.Turn.BrainValue() / @Model.Game.ActivePlayerBrainValue()</td>
-            <td width="10px"></td>
+            <td width="260px">Brains: @Model.Game.Turn.BrainValue / @Model.Game.ActivePlayerBrainValue</td>
+            <td width="1px"></td>
 
             <!--Turn message-->
             @{
-                var messageColor = "darkred";
-                if (Model.Game.Turn.MessageType == WebApplication1.Models.Turn.TurnMessageType.RoundStatus)
+                var messageColor = "white";
+                if (Model.Game.Turn.MessageType == WebApplication1.Models.Turn.TurnMessageType.SortAction)
                 {
-                    messageColor = "lightsteelblue";
+                    messageColor = "darkred";
                 }
-                <td width="265px" style="text-align:center; font-family:Broadway; font-size:24px; color:@messageColor">@Model.Game.Turn.Message</td>
+                var fontSize = "30px";
+                if (Model.Game.Turn.Message.Length >= 19)
+                {
+                    fontSize = "22px";
+                }
+                else if (Model.Game.Turn.Message.Length >= 12)
+                {
+                    fontSize = "24px";
+                }
+                <td width="260px" style="text-align:center; font-family:Broadway; font-size:@fontSize; color:@messageColor">@Model.Game.Turn.Message</td>
             }
-            <td width="10px"></td>
+            <td width="1px"></td>
 
             <!--Shots count-->
-            <td width="265px">Shots: @Model.Game.Turn.ShotgunValue() / 3</td>
+            <td width="272px">Shots: @Model.Game.Turn.ShotgunValue / 3</td>
         </tr>
 
         <!--Row for dice-->
         <tr>
-            @*<td width="250px"></td>*@
-            <td width="40px"></td>
-
-            <!--Brains-->
-            <td width="265px" valign="top" style="border:2px solid black">
+            <!--Brain dice-->
+            <td width="260px" valign="top" style="border:2px solid black" >
                 @{
                     for (int i = 0; i < Model.Game.Turn.Keep.Dice.Count; i++)
                     {
                         if (Model.Game.Turn.Keep.Dice[i].FaceGroup == WebApplication1.Models.DieFaceGroup.Brain)
                         {
-                            <img src="~/Content/@Model.Game.Turn.Keep.Dice[i].ImageName" style="padding-top:3px" />
+                            <img src="~/Content/@Model.Game.Turn.Keep.Dice[i].ImageName" />
                         }
                         @Html.HiddenFor(model => model.Game.Turn.Keep.Dice[i].BrainValue, new { @Value = Model.Game.Turn.Keep.Dice[i].BrainValue })
                         @Html.HiddenFor(model => model.Game.Turn.Keep.Dice[i].Face, new { @Value = Model.Game.Turn.Keep.Dice[i].Face })
@@ -119,19 +118,18 @@
                     }
                 }
             </td>
-            <td width="10px"></td>
+            <td width="1px"></td>
 
-            <!--Hand-->
-            <td width="275px" style="vertical-align:top">
-                <table width="100%" style="vertical-align:top">
-
+            <!--Hand dice and buttons-->
+            <td width="270px" valign="top">
+                <table style="width:100%" valign="top">
                     <!--Hand dice-->
-                    <tr height="90" style="vertical-align:top">
-                        <td valign="top" style="border:2px solid black" style="vertical-align:top">
+                    <tr height="93px" valign="top">
+                        <td style="border:2px solid black">
                             @{
                                 for (int i = 0; i < Model.Game.Turn.Hand.Dice.Count; i++)
                                 {
-                                    <img src="~/Content/@Model.Game.Turn.Hand.Dice[i].ImageName" style="padding-top:3px" />
+                                    <img src="~/Content/@Model.Game.Turn.Hand.Dice[i].ImageName" />
                                     @Html.HiddenFor(model => model.Game.Turn.Hand.Dice[i].BrainValue, new { @Value = Model.Game.Turn.Hand.Dice[i].BrainValue })
                                     @Html.HiddenFor(model => model.Game.Turn.Hand.Dice[i].Face, new { @Value = Model.Game.Turn.Hand.Dice[i].Face })
                                     @Html.HiddenFor(model => model.Game.Turn.Hand.Dice[i].FaceType, new { @Value = Model.Game.Turn.Hand.Dice[i].FaceType })
@@ -143,13 +141,13 @@
                         </td>
                     </tr>
 
-                    <tr height="10px">
+                    <tr height="1px">
                         <td></td>
                     </tr>
 
                     <!--Hand buttons-->
                     <tr style="vertical-align:top">
-                        <td>
+                        <td valign="top">
                             @{
                                 if (Model.Game.RoundType != WebApplication1.Models.GameRoundType.GameOver)
                                 {
@@ -183,16 +181,16 @@
                 </table>
             </td>
 
-            <td width="10px"></td>
+            <td width="1px"></td>
 
-            <!--Shots-->
-            <td colspan="2" width="265px" valign="top" style="border:2px solid black">
+            <!--Shots dice-->
+            <td width="260px" valign="top" style="border:2px solid black">
                 @{
                     for (int i = 0; i < Model.Game.Turn.Keep.Dice.Count; i++)
                     {
                         if (Model.Game.Turn.Keep.Dice[i].FaceGroup != WebApplication1.Models.DieFaceGroup.Brain)
                         {
-                            <img src="~/Content/@Model.Game.Turn.Keep.Dice[i].ImageName" style="padding-top:3px" />
+                            <img src="~/Content/@Model.Game.Turn.Keep.Dice[i].ImageName" />
                         }
                         @Html.HiddenFor(model => model.Game.Turn.Keep.Dice[i].BrainValue, new { @Value = Model.Game.Turn.Keep.Dice[i].BrainValue })
                         @Html.HiddenFor(model => model.Game.Turn.Keep.Dice[i].Face, new { @Value = Model.Game.Turn.Keep.Dice[i].Face })
