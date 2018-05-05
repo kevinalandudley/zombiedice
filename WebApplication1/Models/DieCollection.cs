@@ -56,6 +56,11 @@ namespace WebApplication1.Models
             return (Dice.Exists(x => x.FaceType != faceType));
         }
 
+        public bool AreSorted()
+        {
+
+        }
+
         public int BrainValue
         {
             get

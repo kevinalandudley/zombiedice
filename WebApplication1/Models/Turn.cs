@@ -44,8 +44,8 @@ namespace WebApplication1.Models
                     bool isFirstFill = Hand.Dice.Count + Keep.Dice.Count == 0;
                     foreach (DieKind kind in System.Enum.GetValues(typeof(DieKind)))
                     {
-                        // Santa is never re-added to the cup.
-                        if (isFirstFill || kind != DieKind.Santa)
+                        // Santa and monkey are never re-added to the cup.
+                        if (isFirstFill || (kind != DieKind.Santa && kind != DieKind.Monkey))
                         {
                             // Fill the cup with the maximum number of dice for this die type.
                             // Dice in the hand and shotguns in the keep are not re-added to the cup.
@@ -75,6 +75,8 @@ namespace WebApplication1.Models
                 case DieKind.Hottie:
                     return 1;
                 case DieKind.Santa:
+                    return 1;
+                case DieKind.Monkey:
                     return 1;
                 default:
                     return 0;
@@ -111,8 +113,20 @@ namespace WebApplication1.Models
 
         public void Sort()
         {
+            // Sort Banana.
+            if (SortBanana())
+            {
+            }
+            // Sort Monkey gets brains.
+            else if (SortMonkeyGetsBrains())
+            {
+            }
+            // Sort Monkey gets shotguns.
+            else if (SortMonkeyGetsShotguns())
+            {
+            }
             // Sort Energy gets runners.
-            if (SortEnergyGetsRunners())
+            else if (SortEnergyGetsRunners())
             {
             }
             // Sort Hunk saves Hottie.
@@ -128,14 +142,12 @@ namespace WebApplication1.Models
                 // Move kept dice from the hand to the keep.
                 foreach (var die in Hand.Dice.ToList())
                 {
-                    // Footprints are not removed from the hand.
-                    if (die.FaceType != DieFaceType.Footprints)
+                    if (die.FaceGroup == DieFaceGroup.Brain || die.FaceGroup == DieFaceGroup.Shotgun)
                     {
                         Keep.Dice.Add(die);
                         Hand.Dice.Remove(die);
                     }
                 }
-
             }
             // Set last action.
             LastAction = Action.Sort;
@@ -144,15 +156,40 @@ namespace WebApplication1.Models
         private bool IsSorted()
         {
             // Hand is sorted if there are only footprints left and no other sort actions are needed.
-            return Hand.DieCount(DieFaceType.Footprints) == Hand.Dice.Count && !HasEnergyGetsRunners() && 
-                   !HasShotgunSavesBrain(DieKind.Hunk, DieKind.Hottie) && !HasShotgunSavesBrain(DieKind.Hottie, DieKind.Hunk);
+            bool result = false;
+            if (!HasBanana() && !HasMonkeyGetsBrains() && !HasMonkeyGetsShotguns() && !HasEnergyGetsRunners() && !HasShotgunSavesBrain(DieKind.Hunk, DieKind.Hottie) && !HasShotgunSavesBrain(DieKind.Hottie, DieKind.Hunk))
+            {
+                if (Hand.DieCount(DieFaceType.Brain) + Hand.DieCount(DieFaceType.Shotgun) == 0)
+                {
+                    result = true;
+                }
+            }
+            return result;
+        }
+
+        private bool HasBanana()
+        {
+            // Return if hand has a banana.
+            return Hand.HasDie(DieFaceType.Banana);
+        }
+
+        private bool HasMonkeyGetsBrains()
+        {
+            // Return if hand has a good monkey and hand has footprints.
+            return Hand.HasDie(DieFaceType.GoodMonkey) && Hand.HasDie(DieFaceType.Footprints);
+        }
+
+        private bool HasMonkeyGetsShotguns()
+        {
+            // Return if hand has an evil monkey and hand has footprints.
+            return Hand.HasDie(DieFaceType.EvilMonkey) && Hand.HasDie(DieFaceType.Footprints);
         }
 
         private bool HasEnergyGetsRunners()
         {
             // Return if hand or keep has energy drink and hand has green footprints.
             return (Hand.HasDie(DieFaceType.EnergyDrink) || Keep.HasDie(DieFaceType.EnergyDrink)) &&
-                   (Hand.Dice.Exists(x => x.Kind == DieKind.Green && x.FaceType == DieFaceType.Footprints));
+                   (Hand.HasDie(DieKind.Green, DieFaceType.Footprints));
         }
 
         private bool HasShotgunSavesBrain(DieKind shotgunDieKind, DieKind brainDieKind)
@@ -168,6 +205,62 @@ namespace WebApplication1.Models
             return Hand.ShotgunValue + Keep.ShotgunValue >= 3;
         }
 
+        bool SortBanana()
+        {
+            bool result = false;
+            if (HasBanana())
+            {
+                // Return all dice in the hand to the cup.
+                foreach (var die in Hand.Dice.ToList())
+                {
+                    Cup.Dice.Add(die);
+                    Hand.Dice.Remove(die);
+                }
+                result = true;
+            }
+            return result;
+        }
+
+        bool SortMonkeyGetsBrains()
+        {
+            bool result = false;
+            if (HasMonkeyGetsBrains())
+            {
+                // Change all footprints in the hand to brains.
+                foreach (var die in Hand.Dice)
+                {
+                    if (die.FaceType == DieFaceType.Footprints)
+                    {
+                        if (die.FlipToBrain())
+                        {
+                            result = true;
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+
+        bool SortMonkeyGetsShotguns()
+        {
+            bool result = false;
+            if (HasMonkeyGetsShotguns())
+            {
+                // Change all footprints in the hand to shotguns.
+                foreach (var die in Hand.Dice)
+                {
+                    if (die.FaceType == DieFaceType.Footprints)
+                    {
+                        if (die.FlipToShotgun())
+                        {
+                            result = true;
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+
         bool SortEnergyGetsRunners()
         {
             bool result = false;
@@ -178,14 +271,8 @@ namespace WebApplication1.Models
                 {
                     if (die.Kind == DieKind.Green && die.FaceType == DieFaceType.Footprints)
                     {
-                        if (die.Faces.Contains(DieFace.Brain))
+                        if (die.FlipToBrain())
                         {
-                            die.Face = DieFace.Brain;
-                            result = true;
-                        }
-                        else if (die.Faces.Contains(DieFace.DoubleBrain))
-                        {
-                            die.Face = DieFace.DoubleBrain;
                             result = true;
                         }
                     }
@@ -317,6 +404,9 @@ namespace WebApplication1.Models
         private enum TurnMessageId
         {
             None,
+            Banana,
+            MonkeyGetsBrains,
+            MonkeyGetsShotguns,
             EnergyGetsRunners,
             HunkSavesHottie,
             HottieSavesHunk,
@@ -335,7 +425,19 @@ namespace WebApplication1.Models
                 // Get sort message.
                 if (NextAction == Action.Sort || NextAction == Action.Quit)
                 {
-                    if (HasEnergyGetsRunners())
+                    if (HasBanana())
+                    {
+                        return TurnMessageId.Banana;
+                    }
+                    else if (HasMonkeyGetsBrains())
+                    {
+                        return TurnMessageId.MonkeyGetsBrains;
+                    }
+                    else if (HasMonkeyGetsShotguns())
+                    {
+                        return TurnMessageId.MonkeyGetsShotguns;
+                    }
+                    else if (HasEnergyGetsRunners())
                     {
                         return TurnMessageId.EnergyGetsRunners;
                     }
@@ -412,8 +514,14 @@ namespace WebApplication1.Models
             {
                 switch (MessageId)
                 {
+                    case TurnMessageId.Banana:
+                        return "Banana!";
+                    case TurnMessageId.MonkeyGetsBrains:
+                        return "Monkey Gets Brains!";
+                    case TurnMessageId.MonkeyGetsShotguns:
+                        return "Monkey Gets Shotguns!";
                     case TurnMessageId.EnergyGetsRunners:
-                        return "Energy!";
+                        return "Energy Gets Runners!";
                     case TurnMessageId.HunkSavesHottie:
                         return "Hunk Saves Hottie!";
                     case TurnMessageId.HottieSavesHunk:
@@ -424,12 +532,12 @@ namespace WebApplication1.Models
                         return "Tied!";
                     case TurnMessageId.Leading:
                         return "Leading!";
-                    case TurnMessageId.GameOver:
-                        return "";
                     case TurnMessageId.FinalRound:
                         return "Last Round!";
                     case TurnMessageId.TieBreaker:
                         return "Tiebreaker!";
+                    case TurnMessageId.GameOver:
+                        return "";
                     default:
                         return "";
                 }
@@ -449,6 +557,9 @@ namespace WebApplication1.Models
             {
                 switch (MessageId)
                 {
+                    case TurnMessageId.Banana:
+                    case TurnMessageId.MonkeyGetsBrains:
+                    case TurnMessageId.MonkeyGetsShotguns:
                     case TurnMessageId.EnergyGetsRunners:
                     case TurnMessageId.HunkSavesHottie:
                     case TurnMessageId.HottieSavesHunk:

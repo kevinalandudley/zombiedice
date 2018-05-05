@@ -241,6 +241,12 @@
     <Content Include="Content\HunkHeelprints.gif" />
     <Content Include="Content\HunkHelmet.gif" />
     <Content Include="Content\HunkShotgun.gif" />
+    <Content Include="Content\MonkeyBanana.gif" />
+    <Content Include="Content\MonkeyBrain.gif" />
+    <Content Include="Content\MonkeyEvilMonkey.gif" />
+    <Content Include="Content\MonkeyGoodMonkey.gif" />
+    <Content Include="Content\MonkeyMonkeyprints.gif" />
+    <Content Include="Content\MonkeyShotgun.gif" />
     <Content Include="Content\RedBrain.gif" />
     <Content Include="Content\RedDoubleBrain.gif" />
     <Content Include="Content\RedDoubleShotgun.gif" />
