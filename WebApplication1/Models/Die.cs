@@ -42,6 +42,8 @@ namespace WebApplication1.Models
                         return new List<DieFace> { DieFace.Brain, DieFace.Heelprints, DieFace.Heelprints, DieFace.Heelprints, DieFace.Shotgun, DieFace.Shotgun };
                     case DieKind.Santa:
                         return new List<DieFace> { DieFace.DoubleBrain, DieFace.Brain, DieFace.Footprints, DieFace.Shotgun, DieFace.EnergyDrink, DieFace.Helmet };
+                    case DieKind.Monkey:
+                        return new List<DieFace> { DieFace.Brain, DieFace.Monkeyprints, DieFace.Shotgun, DieFace.GoodMonkey, DieFace.EvilMonkey, DieFace.Banana };
                     default:
                         return null;
                 }
@@ -62,6 +64,7 @@ namespace WebApplication1.Models
                         return DieFaceType.Brain;
                     case DieFace.Footprints:
                     case DieFace.Heelprints:
+                    case DieFace.Monkeyprints:
                         return DieFaceType.Footprints;
                     case DieFace.Shotgun:
                     case DieFace.DoubleShotgun:
@@ -70,6 +73,12 @@ namespace WebApplication1.Models
                         return DieFaceType.EnergyDrink;
                     case DieFace.Helmet:
                         return DieFaceType.Helmet;
+                    case DieFace.GoodMonkey:
+                        return DieFaceType.GoodMonkey;
+                    case DieFace.EvilMonkey:
+                        return DieFaceType.EvilMonkey;
+                    case DieFace.Banana:
+                        return DieFaceType.Banana;
                     default:
                         return DieFaceType.NotSet;
                 }
@@ -82,11 +91,14 @@ namespace WebApplication1.Models
             {
                 switch (FaceType)
                 {
+                    case DieFaceType.Brain:
+                    case DieFaceType.EnergyDrink:
+                        return DieFaceGroup.Brain;
                     case DieFaceType.Shotgun:
                     case DieFaceType.Helmet:
                         return DieFaceGroup.Shotgun;
                     default:
-                        return DieFaceGroup.Brain;
+                        return DieFaceGroup.None;
                 }
             }
         }
@@ -97,6 +109,40 @@ namespace WebApplication1.Models
             {
                 return Kind.ToString() + Face.ToString() + ".gif";
             }
+        }
+
+        public bool FlipToBrain()
+        {
+            bool result = false;
+            // Change face to brain.
+            if (Faces.Contains(DieFace.Brain))
+            {
+                Face = DieFace.Brain;
+                result = true;
+            }
+            else if (Faces.Contains(DieFace.DoubleBrain))
+            {
+                Face = DieFace.DoubleBrain;
+                result = true;
+            }
+            return result;
+        }
+
+        public bool FlipToShotgun()
+        {
+            bool result = false;
+            // Change face to shotgun.
+            if (Faces.Contains(DieFace.Shotgun))
+            {
+                Face = DieFace.Shotgun;
+                result = true;
+            }
+            else if (Faces.Contains(DieFace.DoubleShotgun))
+            {
+                Face = DieFace.DoubleShotgun;
+                result = true;
+            }
+            return result;
         }
 
         public int BrainValue
@@ -148,7 +194,8 @@ namespace WebApplication1.Models
         Red,
         Hunk,
         Hottie,
-        Santa
+        Santa,
+        Monkey
     }
 
     public enum DieFace
@@ -160,7 +207,11 @@ namespace WebApplication1.Models
         DoubleShotgun,
         Heelprints,
         EnergyDrink,
-        Helmet
+        Helmet,
+        Monkeyprints,
+        GoodMonkey,
+        EvilMonkey,
+        Banana
     }
 
     public enum DieFaceType
@@ -171,10 +222,14 @@ namespace WebApplication1.Models
         Shotgun,
         EnergyDrink,
         Helmet,
+        GoodMonkey,
+        EvilMonkey,
+        Banana
     }
 
     public enum DieFaceGroup
     {
+        None,
         Brain,
         Shotgun,
     }
